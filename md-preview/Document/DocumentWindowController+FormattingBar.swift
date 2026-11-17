@@ -598,6 +598,11 @@ extension DocumentWindowController {
                           title: NSLocalizedString("Inline Code", comment: "Formatting toolbar tooltip"),
                           symbol: "chevron.left.forwardslash.chevron.right",
                           command: "code")
+        menu.addItem(.separator())
+        addFormattingItem(to: menu,
+                          title: NSLocalizedString("Insert Floorball Diagram", comment: ""),
+                          symbol: "sportscourt",
+                          command: "floorball")
         popUp(menu, from: sender)
     }
 
@@ -614,7 +619,12 @@ extension DocumentWindowController {
             let host = NSHostingController(rootView: StylingFormatPopover(selectedStyle: style) { [weak self, weak editor] style, language in
                 self?.formattingPopover?.close()
                 self?.formattingPopover = nil
-                editor?.setBlockStyle(style, language: language)
+                // A diagram is inserted, not a style applied to the selection.
+                if style == "floorball" {
+                    self?.formatMarkdown("floorball")
+                } else {
+                    editor?.setBlockStyle(style, language: language)
+                }
             })
             host.sizingOptions = .preferredContentSize
             popover.contentViewController = host
@@ -674,6 +684,7 @@ private struct StylingFormatPopover: View {
         ("plain", "Plain Text Block", "text.alignleft"),
         ("fenced", "Code Block", "curlybraces.square"),
         ("table", "Table", "tablecells"),
+        ("floorball", "Floorball Diagram", "sportscourt"),
     ]
 
     var body: some View {

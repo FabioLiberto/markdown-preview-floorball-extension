@@ -1708,4 +1708,134 @@ document.querySelector('script[src="math-test.js"]').dispatchEvent(new dom.windo
 await retryLoad
 check('math loader caches successful loads', window.__mdLoadMath() === retryLoad)
 
+// Floorball diagrams: rendered fences, the graphical editor, and its writes.
+{
+  const fence = (json) => "```floorball\n" + json + "\n```"
+  const first = '{ "version": 1, "rink": { "layout": "half" }, "elements": [{ "id": "p1", "type": "player", "team": "attack", "number": 7, "x": 0.3, "y": 0.6 }], "paths": [] }'
+  const second = '{ "version": 1, "rink": { "layout": "full" }, "elements": [], "paths": [] }'
+  const source = "# Drill\n\nIntro text.\n\n" + fence(first) + "\n\nBetween.\n\n" + fence(second)
+    + "\n\n```floorball\n{ not json\n```\n\n- Item\n\n  " + fence(second).replace(/\n/g, "\n  ") + "\n\nEnd.\n"
+  const host = dom.window.document.createElement("div")
+  dom.window.document.body.appendChild(host)
+  const posted = []
+  dom.window.document.addEventListener("keydown", (event) => { if (event.key === "Escape" && !event.defaultPrevented) posted.push("cancel") })
+  const fb = dom.window.MDEditor.create(host, source, {})
+  const lineOf = (text, from = 0) => fb.getMarkdown().slice(0, fb.getMarkdown().indexOf(text, from)).split("\n").length
+  const fences = () => [...fb.getMarkdown().matchAll(/```floorball\n([\s\S]*?)\n```/g)].map((match) => match[1])
+  const nestedFence = () => /- Item\n\n {2}```floorball\n([\s\S]*?)\n {2}```/.exec(fb.getMarkdown())?.[1]
+
+  check("floorball fences render as diagrams", host.querySelectorAll(".cm-md-floorball-preview svg.fb-diagram").length === 3)
+  check("an invalid floorball fence shows an error with its source",
+    host.querySelector(".cm-md-floorball-error")?.textContent.includes("{ not json"))
+  check("a rendered diagram hides its JSON", !host.querySelector(".cm-content").textContent.includes('"version"'))
+
+  const sheet = () => dom.window.document.querySelector(".fb-backdrop")
+  const key = (init) => {
+    const target = dom.window.document.activeElement || dom.window.document.body
+    const event = new dom.window.KeyboardEvent("keydown", { bubbles: true, cancelable: true, ...init })
+    target.dispatchEvent(event)
+    return event
+  }
+  // jsdom has no layout: give the canvas a box twice the view box, which the
+  // editor maps onto the view box. `on` aims the event at an item, as a hit
+  // on it would.
+  const pointer = (type, nx, ny, on = null, layout = "full") => {
+    const width = layout === "half" ? 200 : 400
+    const canvas = sheet().querySelector(".fb-canvas")
+    canvas.getBoundingClientRect = () => ({ left: 0, top: 0, width: (width + 12) * 2, height: 424 })
+    const target = (on && canvas.querySelector(`[data-fb-id="${on}"] *`)) || canvas.querySelector("svg") || canvas
+    target.dispatchEvent(new dom.window.MouseEvent(type, {
+      bubbles: true, cancelable: true, button: 0,
+      clientX: (nx * width + 6) * 2, clientY: (ny * 200 + 6) * 2,
+    }))
+  }
+  const tool = (name) => sheet().querySelector(`[data-tool="${name}"]`).click()
+  const before = fb.getMarkdown()
+
+  check("openFloorball refuses a fence that does not parse", fb.openFloorball(lineOf("{ not json") - 1) === false && !sheet())
+  check("openFloorball opens the fence on a line", fb.openFloorball(lineOf("```floorball\n" + second)) === true && !!sheet())
+  check("opening the editor leaves the document unchanged", fb.getMarkdown() === before)
+  tool("attacker")
+  pointer("pointerdown", 0.25, 0.5)
+  pointer("pointerup", 0.25, 0.5)
+  let diagrams = fences()
+  check("placing an attacker writes a player to the fence", /"type": "player", "team": "attack", "number": 1, "x": 0.25, "y": 0.5/.test(diagrams[1]))
+  check("the other diagram is untouched", diagrams[0] === first)
+  check("surrounding Markdown is preserved", fb.getMarkdown().startsWith("# Drill\n\nIntro text.\n\n") && fb.getMarkdown().endsWith("\n\nEnd.\n"))
+  check("the edited fence is valid JSON", JSON.parse(diagrams[1]).elements.length === 1)
+
+  tool("select")
+  pointer("pointerdown", 0.25, 0.5, "p1")
+  for (const step of [0.3, 0.35, 0.4]) pointer("pointermove", step, 0.4)
+  pointer("pointerup", 0.4, 0.4)
+  check("dragging a player moves it in one write", /"x": 0.4, "y": 0.4/.test(fences()[1]))
+
+  tool("pass")
+  pointer("pointerdown", 0.4, 0.4)
+  pointer("pointermove", 0.6, 0.3)
+  pointer("pointerup", 0.7, 0.2)
+  check("dragging with the pass tool draws a pass", /"type": "pass", "points": \[\[0.4, 0.4\], \[0.7, 0.2\]\]/.test(fences()[1]))
+
+  key({ key: "Escape" })
+  tool("select")
+  pointer("pointerdown", 0.4, 0.4, "p1")
+  pointer("pointerup", 0.4, 0.4)
+  const sizeButton = (label) => [...sheet().querySelectorAll('.fb-inspector [role="radio"]')].find((button) => button.textContent === label)
+  sizeButton("Small").click()
+  check("the Size control makes a player small", /"id": "p1", "type": "player", "team": "attack", "number": 1, "size": "s"/.test(fences()[1]))
+  tool("defender")
+  pointer("pointerdown", 0.8, 0.8)
+  pointer("pointerup", 0.8, 0.8)
+  check("the next player placed takes the chosen size", /"team": "defense", "number": 1, "size": "s"/.test(fences()[1]))
+  key({ key: "Backspace" })
+  tool("select")
+  pointer("pointerdown", 0.4, 0.4, "p1")
+  pointer("pointerup", 0.4, 0.4)
+  key({ key: "Backspace" })
+  check("Backspace deletes the selected item", !/"type": "player"/.test(fences()[1]) && /"type": "pass"/.test(fences()[1]))
+  key({ key: "z", metaKey: true })
+  check("⌘Z restores the deleted player", /"type": "player"/.test(fences()[1]))
+  key({ key: "z", metaKey: true, shiftKey: true })
+  check("⇧⌘Z deletes it again", !/"type": "player"/.test(fences()[1]))
+  for (let i = 0; i < 10; i++) key({ key: "z", metaKey: true })
+  check("undo stops at the diagram as it was opened", fb.getMarkdown() === before)
+
+  tool("cone")
+  const escape = key({ key: "Escape" })
+  check("Escape first leaves the placing tool", escape.defaultPrevented && !!sheet()
+    && sheet().querySelector('[data-tool="select"]').getAttribute("aria-pressed") === "true")
+  const closing = key({ key: "Escape" })
+  check("Escape then closes the editor, never reaching the host's cancel",
+    closing.defaultPrevented && !sheet() && !posted.includes("cancel"))
+
+  // Nested in a list item: every written line keeps the item's indent.
+  check("a diagram in a list opens", fb.openFloorball(lineOf("  ```floorball")) === true)
+  tool("cone")
+  pointer("pointerdown", 0.5, 0.5)
+  pointer("pointerup", 0.5, 0.5)
+  sheet().querySelector(".fb-done").click()
+  check("a nested diagram stays inside its list item", JSON.parse(nestedFence()?.replace(/^ {2}/gm, "") ?? "null")?.elements[0]?.type === "cone")
+
+  // Delete Diagram removes the whole fence and one separating blank line.
+  const beforeDelete = fb.getMarkdown()
+  check("the Between diagram opens for deleting", fb.openFloorball(lineOf("```floorball\n" + second)) === true)
+  sheet().querySelector('[aria-label="Delete Diagram"]').click()
+  check("Delete Diagram closes the editor", !sheet())
+  check("Delete Diagram removes the fence and leaves the text around it",
+    fb.getMarkdown() === beforeDelete.replace("Between.\n\n" + fence(second) + "\n\n", "Between.\n\n"))
+  fb.replaceMarkdown(beforeDelete)
+
+  // Insert: a new fence after the current block, opened in the editor.
+  fb.select(fb.getMarkdown().indexOf("Between."))
+  fb.exec("floorball")
+  check("Insert Floorball Diagram opens the editor", !!sheet())
+  sheet().querySelector(".fb-done").click()
+  const inserted = /Between\.\n\n```floorball\n([\s\S]*?)\n```\n\n```floorball/.exec(fb.getMarkdown())
+  check("Insert Floorball Diagram adds a valid empty diagram after the block",
+    !!inserted && JSON.parse(inserted[1]).version === 1 && JSON.parse(inserted[1]).elements.length === 0)
+  check("inserting keeps the rest of the document", fb.getMarkdown().startsWith("# Drill\n\nIntro text.\n\n" + fence(first)))
+  fb.destroy()
+  host.remove()
+}
+
 process.exit(failures ? 1 : 0)

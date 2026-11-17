@@ -313,7 +313,8 @@ nonisolated extension MarkdownHTML {
             strictLineBreaks: strictLineBreaks
         )
         let mermaidResult = renderMermaidBlocks(in: formatted)
-        let mathResult = renderMathBlocks(in: mermaidResult.html, with: math)
+        let floorballResult = renderFloorballBlocks(in: mermaidResult.html)
+        let mathResult = renderMathBlocks(in: floorballResult.html, with: math)
         return FootnoteDefinitionRenderResult(
             html: mathResult.html,
             containsMath: mathResult.containsMath,

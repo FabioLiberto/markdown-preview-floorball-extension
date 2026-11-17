@@ -197,6 +197,9 @@ final class MarkdownWebView: NSView, WKNavigationDelegate {
     /// Whether the reader has selected article text, for Copy as Plain Text.
     private var hasSelectedText = false
     var taskCheckboxToggled: ((Int, Bool) -> Void)?
+    /// A floorball diagram's Edit button was clicked; the argument is the
+    /// 1-based source line of its fence.
+    var floorballEditRequested: ((Int) -> Void)?
     var zoomDidChange: ((CGFloat) -> Void)?
     var fragmentLinkActivated: ((String) -> Void)?
     var pointerDocumentYDidChange: ((CGFloat) -> Void)?
@@ -811,6 +814,9 @@ final class MarkdownWebView: NSView, WKNavigationDelegate {
             if #available(macOS 26.0, *) { updateBlockGlassHUD(.code, dict) }
         case "mermaidPopup":
             presentMermaidPopup(dict)
+        case "floorballEdit":
+            guard let line = dict["line"] as? Int, line > 0 else { return }
+            floorballEditRequested?(line)
         case "tablePopup":
             guard let markdown = dict["markdown"] as? String else { return }
             TablePreviewWindow.shared.present(markdown: markdown, title: dict["title"] as? String,

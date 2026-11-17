@@ -370,7 +370,8 @@ nonisolated enum MarkdownHTML {
             strictLineBreaks: strictLineBreaks
         )
         let mermaidResult = renderMermaidBlocks(in: formatted)
-        let mathResult = renderMathBlocks(in: mermaidResult.html, with: math)
+        let floorballResult = renderFloorballBlocks(in: mermaidResult.html)
+        let mathResult = renderMathBlocks(in: floorballResult.html, with: math)
         let footnoteReferenceHTML = renderFootnoteReferences(in: mathResult.html, with: footnotes)
         let footnoteDefinitions = renderFootnoteDefinitions(
             footnotes,

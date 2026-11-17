@@ -1343,10 +1343,12 @@ nonisolated struct EscapingHTMLFormatter: MarkupWalker {
         } else {
             languageAttr = ""
         }
-        // Mermaid fences become figures later in the pipeline and math is
-        // extracted before the walker runs, so every other fence is ours.
+        // Mermaid and floorball fences become figures later in the pipeline
+        // and math is extracted before the walker runs, so every other fence
+        // is ours.
+        let isDiagram = language == "mermaid" || language == "floorball"
         var body = escapeText(codeBlock.code)
-        if highlighter, language != "mermaid" {
+        if highlighter, !isDiagram {
             if let language, !language.isEmpty,
                let highlighted = CodeHighlighter.highlight(codeBlock.code, language: language) {
                 body = highlighted
@@ -1361,7 +1363,7 @@ nonisolated struct EscapingHTMLFormatter: MarkupWalker {
             return String(decoding: parsedSourceLines[range.lowerBound.line - 1].utf8.dropFirst(range.lowerBound.column - 1), as: UTF8.self)
         } ?? ""
         let isFenced = opening.hasPrefix("```") || opening.hasPrefix("~~~")
-        let labelAttribute = isFenced && language != "mermaid"
+        let labelAttribute = isFenced && !isDiagram
             ? " data-code-language=\"\(escapeAttribute(label))\"" : ""
         result += "<pre\(sourceLineAttribute(codeBlock))\(labelAttribute)><code\(languageAttr)>\(body)</code></pre>\n"
     }

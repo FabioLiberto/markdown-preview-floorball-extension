@@ -44,6 +44,7 @@ nonisolated extension MarkdownHTML {
     /// page whose code arrived highlighted from the renderer never loads that
     /// runtime, yet its spans still need their colors.
     static let stylesheet = baseStylesheet + "\n" + highlightThemeCSS + "\n" + tableControlsCSS
+        + "\n" + floorballStylesheet
 
     /// Pele's SVG reads its colours from these, so diagrams follow the theme,
     /// appearance changes and the paper palette without a re-render. Shared by

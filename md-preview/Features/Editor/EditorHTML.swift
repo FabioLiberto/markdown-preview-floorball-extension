@@ -598,6 +598,57 @@ nonisolated enum EditorHTML {
         /* A diagram nested in a quote or list: the bundle sets the indent,
            padding and one quote bar per level, as on quote and list lines. */
         .cm-md-mermaid-nest { background-repeat: no-repeat; }
+        /* Floorball diagrams: the preview's figure, plus an Edit pill. The
+           whole drawing opens the diagram editor. */
+        \(MarkdownHTML.floorballStylesheet)
+        .cm-md-floorball-preview {
+            position: relative;
+            margin: 0;
+            cursor: pointer;
+        }
+        .cm-md-floorball-preview svg {
+            display: block;
+            width: 100%;
+            height: auto;
+        }
+        .cm-md-floorball-preview[data-fb-layout="half"] svg {
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        .cm-md-floorball-edit {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 3px 10px;
+            border: 0.5px solid color-mix(in srgb, var(--text) 18%, transparent);
+            border-radius: 999px;
+            background: color-mix(in srgb, Canvas 85%, transparent);
+            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(8px);
+            color: var(--text);
+            font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
+            opacity: 0;
+            transition: opacity 0.15s;
+            cursor: pointer;
+        }
+        .cm-md-floorball-preview:hover .cm-md-floorball-edit { opacity: 1; }
+        .cm-md-floorball-preview:hover svg { filter: brightness(0.985); }
+        .cm-md-floorball-error {
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: var(--code-bg);
+            border: 1px solid color-mix(in srgb, #d70015 35%, transparent);
+            cursor: text;
+        }
+        .cm-md-floorball-message { color: light-dark(#b3261e, #ff6961); font-weight: 500; }
+        .cm-md-floorball-error pre {
+            margin: 8px 0 0;
+            white-space: pre-wrap;
+            overflow-wrap: anywhere;
+            font-family: \(MarkdownHTML.codeFontFamily);
+            font-size: 0.85em;
+            color: var(--secondary);
+        }
         \(MarkdownHTML.tableControlsCSS)
         .cm-md-table {
             font-family: ui-monospace, "SF Mono", Menlo, monospace;
@@ -809,6 +860,7 @@ nonisolated enum EditorHTML {
                 messages.forError = \(MarkdownHTML.diagramErrorMessageJS);
                 return messages;
             })();
+            window.__mdFloorballMessages = \(MarkdownHTML.floorballMessagesJS);
             window.__mdTableExpandLabel = \(jsStringLiteral(NSLocalizedString("Expand Table", comment: "Open a table in full screen")));
             window.__mdMathEditLabel = \(jsStringLiteral(NSLocalizedString("Math formula. Click to edit source.", comment: "Accessibility label for a rendered equation in the editor")));
             window.__mdOpenTablePopup = function (markdown) { post({kind: "tablePopup", markdown}); };
@@ -902,6 +954,9 @@ nonisolated enum EditorHTML {
                     performTableContextAction: function (token, action) {
                         return editor.performTableContextAction(token, action);
                     },
+                    openFloorball: function (line) { return editor.openFloorball(line); },
+                    closeFloorball: function () { return editor.closeFloorball(); },
+                    isFloorballOpen: function () { return editor.isFloorballOpen(); },
                     exec: function (name) { editor.exec(name); }
                 };
                 requestAnimationFrame(function () { post("ready"); });

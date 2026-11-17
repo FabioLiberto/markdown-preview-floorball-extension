@@ -1653,6 +1653,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         menu.addItem(item("Numbered List", command: "orderedList", key: "9", modifiers: [.shift, .command]))
         menu.addItem(item("Checklist", command: "taskList", key: "l", modifiers: [.shift, .command]))
         menu.addItem(item("Block Quote", command: "quote", key: "'"))
+        menu.addItem(.separator())
+        let floorball = item("Insert Floorball Diagram", command: "floorball")
+        floorball.image = NSImage(systemSymbolName: "sportscourt", accessibilityDescription: nil)
+        menu.addItem(floorball)
 
         let rootItem = NSMenuItem(title: formatTitle, action: nil, keyEquivalent: "")
         rootItem.submenu = menu

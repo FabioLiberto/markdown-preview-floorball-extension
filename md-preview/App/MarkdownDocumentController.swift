@@ -52,6 +52,13 @@ final class MarkdownDocumentController: NSDocumentController {
         )
     }
 
+    /// Every way a document opens ends here, so the start page goes away
+    /// whatever opened it.
+    override func addDocument(_ document: NSDocument) {
+        super.addDocument(document)
+        StartWindowController.shared.dismiss()
+    }
+
     override func openUntitledDocumentAndDisplay(_ displayDocument: Bool) throws -> NSDocument {
         let document = try super.openUntitledDocumentAndDisplay(displayDocument)
         if displayDocument {

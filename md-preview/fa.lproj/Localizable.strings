@@ -648,3 +648,10 @@
 "The sign-in code expired. Try again." = "کد ورود منقضی شد. دوباره تلاش کنید.";
 "GitHub: %@" = "GitHub: ⁨%@⁩";
 "GitHub could not be reached." = "دسترسی به GitHub ممکن نیست.";
+
+/* Start page */
+"Training plans, playbooks, and tactics in Markdown." = "برنامه‌های تمرین، کتاب بازی‌ها و تاکتیک‌ها در Markdown.";
+"New Document" = "سند جدید";
+"Open File or Folder…" = "باز کردن فایل یا پوشه…";
+"Open Team Space" = "باز کردن فضای تیم";
+"Set Up Team Space…" = "راه‌اندازی فضای تیم…";

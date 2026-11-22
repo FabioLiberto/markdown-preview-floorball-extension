@@ -648,3 +648,10 @@
 "The sign-in code expired. Try again." = "登录代码已过期。请重试。";
 "GitHub: %@" = "GitHub：%@";
 "GitHub could not be reached." = "无法连接 GitHub。";
+
+/* Start page */
+"Training plans, playbooks, and tactics in Markdown." = "用 Markdown 编写训练计划、战术手册和战术图。";
+"New Document" = "新建文稿";
+"Open File or Folder…" = "打开文件或文件夹…";
+"Open Team Space" = "打开团队空间";
+"Set Up Team Space…" = "设置团队空间…";

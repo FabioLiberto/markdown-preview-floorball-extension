@@ -648,3 +648,10 @@
 "The sign-in code expired. Try again." = "Der Anmeldecode ist abgelaufen. Versuche es erneut.";
 "GitHub: %@" = "GitHub: %@";
 "GitHub could not be reached." = "GitHub ist nicht erreichbar.";
+
+/* Start page */
+"Training plans, playbooks, and tactics in Markdown." = "Trainingspläne, Playbooks und Taktiken in Markdown.";
+"New Document" = "Neues Dokument";
+"Open File or Folder…" = "Datei oder Ordner öffnen …";
+"Open Team Space" = "Team Space öffnen";
+"Set Up Team Space…" = "Team Space einrichten …";

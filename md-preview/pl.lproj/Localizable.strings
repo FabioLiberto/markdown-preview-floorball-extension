@@ -648,3 +648,10 @@
 "The sign-in code expired. Try again." = "Kod logowania wygasł. Spróbuj ponownie.";
 "GitHub: %@" = "GitHub: %@";
 "GitHub could not be reached." = "Nie można połączyć się z GitHubem.";
+
+/* Start page */
+"Training plans, playbooks, and tactics in Markdown." = "Plany treningów, playbooki i taktyka w Markdownie.";
+"New Document" = "Nowy dokument";
+"Open File or Folder…" = "Otwórz plik lub folder…";
+"Open Team Space" = "Otwórz przestrzeń zespołu";
+"Set Up Team Space…" = "Skonfiguruj przestrzeń zespołu…";

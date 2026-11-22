@@ -1,5 +1,30 @@
 # Changelog
 
+## [0.0.75] – 2026-11-22 – Floorball tactics, shared playbooks
+
+Markdown Preview Floorball 0.0.75 brings floorball tactics diagrams, a Team Space synced with GitHub, and automatic saving.
+
+### Added
+
+- **Floorball Tactics Diagrams.** Draw a rink with players, balls, cones, goals, and run, pass, shot, and dribble arrows right in a document, from Format → Insert Floorball Diagram. The diagram lives in the Markdown file, so it saves, undoes, prints, and exports with the rest of your text ([#1](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/1)).
+- **Team Space.** Sign in with GitHub in Settings → Team Space to keep a folder of playbooks in sync with a repository, combining edits to different lines and asking when two people changed the same ones ([#1](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/1)).
+- **Opens on Your Playbook.** Started without a file, the app opens on your Team Space or the folder you had open last, instead of asking you to choose a file ([#3](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/3)).
+- **Short Context Menu in Edit Mode.** Right-click in the editor for formatting, Find, and photos or scans from a nearby iPhone, without WebKit’s long menu ([#660](https://github.com/pluk-inc/markdown-preview/pull/660)).
+
+### Changed
+
+- **Automatic Saving by Default.** Edits save 2 seconds after you stop typing, so you no longer need ⌘S; pick another interval in Settings → General ([#1](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/1)).
+- **Its Own App.** Markdown Preview Floorball installs next to the original Markdown Preview with its own settings, and new versions come from its GitHub releases instead of an automatic update ([#1](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/1)).
+- **Open Actions First in the File Menu.** Right-clicking a file in the sidebar lists the ways to open it first, without items the system adds ([#658](https://github.com/pluk-inc/markdown-preview/pull/658), [#659](https://github.com/pluk-inc/markdown-preview/pull/659)).
+
+### Fixed
+
+- **Inline Code Wraps in Place.** Long inline code that wraps no longer makes the page scroll sideways ([#657](https://github.com/pluk-inc/markdown-preview/pull/657)).
+
+### Contributors
+
+- [@mfauzaan](https://github.com/mfauzaan) — the Edit Mode context menu, the sidebar file menu, and the inline code fix, from Markdown Preview ([#657](https://github.com/pluk-inc/markdown-preview/pull/657), [#658](https://github.com/pluk-inc/markdown-preview/pull/658), [#659](https://github.com/pluk-inc/markdown-preview/pull/659), [#660](https://github.com/pluk-inc/markdown-preview/pull/660)).
+
 ## [0.0.74] – 2026-11-17 – Edit the Markdown source
 
 Markdown Preview 0.0.74 brings a Markdown source view in Edit Mode, files that keep their line breaks, and printing from Finder.

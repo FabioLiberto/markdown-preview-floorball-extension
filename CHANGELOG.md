@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.77] – 2026-11-22 – Delete from the sidebar
+
+Markdown Preview Floorball 0.0.77 focuses on tidying up your files from the sidebar.
+
+### Added
+
+- **Move to Trash in the Sidebar.** Right-click a file or folder in the sidebar and choose Move to Trash to delete it, and put it back from the Trash if you change your mind ([#7](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/7)).
+
+### Changed
+
+- **Deleted Files Leave the Team Space.** A file you move to the Trash from your Team Space is deleted on GitHub in the next sync, with its earlier versions kept in the repository’s history ([#7](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/7)).
+
 ## [0.0.76] – 2026-11-22 – A start page
 
 Markdown Preview Floorball 0.0.76 focuses on getting you writing as soon as the app opens.

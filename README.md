@@ -1,60 +1,93 @@
-<h1 align="center">Markdown Preview</h1>
+<h1 align="center">Markdown Preview Floorball</h1>
 
 <p align="center">
-  <img src="docs/markdown-logo.svg" width="128" alt="Markdown Preview logo" />
+  <img src="docs/markdown-logo.svg" width="128" alt="Markdown Preview Floorball logo" />
 </p>
 
 <p align="center">
-  A fast, native macOS app for reading Markdown files.
+  A native macOS app for floorball coaches: write training plans and playbooks in Markdown,<br />
+  draw tactics right in the document, and keep them in sync with your team on GitHub.
 </p>
 
-<p align="center"><img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2015%2B-blue" />&nbsp;<img alt="Swift" src="https://img.shields.io/badge/swift-6.0-orange" />&nbsp;<img alt="License" src="https://img.shields.io/badge/license-MIT-green" />&nbsp;<img alt="Latest release" src="https://img.shields.io/github/v/release/pluk-inc/markdown-preview" />&nbsp;<img alt="Homebrew cask" src="https://img.shields.io/homebrew/cask/v/markdown-preview" /></p>
+<p align="center"><img alt="Platform" src="https://img.shields.io/badge/platform-macOS%2015%2B-blue" />&nbsp;<img alt="License" src="https://img.shields.io/badge/license-MIT-green" />&nbsp;<img alt="Latest release" src="https://img.shields.io/github/v/release/FabioLiberto/markdown-preview-floorball-extension" /></p>
 
 <p align="center">
-  <a href="https://discord.com/invite/NUtNMK7re2">
-    <img src="https://img.shields.io/badge/Join%20our%20Discord-5865F2?logo=discord&amp;logoColor=white" alt="Join our Discord community" />
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://buymeacoffee.com/pluk">
-    <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" height="42" alt="Buy Me a Coffee" />
-  </a>
+  <a href="https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases/latest"><b>⬇︎ Download the latest version</b></a>
 </p>
 
 ---
 
-> Drop a `.md` on the icon (or set Markdown Preview as your default handler) and get a clean, scrollable preview with a real document outline — no Electron, no browser tab.
+> Based on [**Markdown Preview**](https://github.com/pluk-inc/markdown-preview) by Pluk, a fast, native Markdown reader and editor for macOS. This project adds floorball tactics diagrams and a GitHub-synced Team Space, and ships as its own app.
 
-## Installation
+## Download
 
-### Markdown Preview Floorball (this fork)
+1. Open the [latest release](https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases/latest) and download `Markdown-Preview-Floorball-<version>.zip`.
+2. Open the zip and drag **Markdown Preview Floorball** to your Applications folder.
+3. Open the app. macOS says it cannot verify the developer, because the app is not notarized by Apple. Click **Done**, then open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to the message about Markdown Preview Floorball. You need to do this once for each version you download.
 
-This fork is a separate app, **Markdown Preview Floorball**
-(`io.github.fabioliberto.md-preview-floorball`). It installs next to the original Markdown
-Preview without sharing its settings, it has no automatic updates and no crash
-reporting, and it is not notarized.
+The app has no automatic updates. For a new version, download it again from [Releases](https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases) and replace the app in Applications. It installs next to the original Markdown Preview without sharing its settings.
 
-1. Download the latest `Markdown-Preview-Floorball-<version>.zip` from the
-   [Releases](https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases)
-   page, open it, and drag **Markdown Preview Floorball** to Applications.
-2. Open it. macOS says it cannot verify the developer: click **Done**, then
-   open **System Settings → Privacy & Security**, scroll down, and click
-   **Open Anyway** next to the message about Markdown Preview Floorball.
-   This is needed once per downloaded version.
-3. For a new version, download it again from Releases and replace the app.
+Requires macOS 15 or later, on Apple Silicon or Intel.
 
-To make the zip: `scripts/package-fork.sh` (needs Xcode).
+## Floorball tactics diagrams
 
-### The original Markdown Preview
+A fenced code block with the info string `floorball` draws a floorball rink (full, half, or blank) with players, goalkeepers, balls, cones, goals, markers, text, and run, pass, shot, dribble, and freehand arrows.
 
-Markdown Preview is available in the official [Homebrew cask repository](https://formulae.brew.sh/cask/markdown-preview):
-
-```sh
-brew install --cask markdown-preview
+````markdown
+```floorball
+{
+  "version": 1,
+  "rink": { "layout": "half" },
+  "elements": [
+    { "id": "p1", "type": "player", "team": "attack", "number": 7, "x": 0.35, "y": 0.65 },
+    { "id": "b1", "type": "ball", "x": 0.37, "y": 0.68 }
+  ],
+  "paths": [
+    { "id": "r1", "type": "pass", "points": [[0.35, 0.65], [0.6, 0.4]] }
+  ]
+}
 ```
+````
 
-Or grab the latest signed and notarized DMG from its [Releases](https://github.com/pluk-inc/markdown-preview/releases) page.
+You never have to write the JSON yourself. In Edit Mode (<kbd>⌘E</kbd>), **Format → Insert Floorball Diagram** adds an empty rink and opens the diagram editor; click any diagram to edit it again, or use **Edit Diagram** on a diagram in Read Mode. The editor has a tool palette, drag to move, handles to bend arrows, a property bar for team, number, label, style, and color, and keyboard shortcuts (Delete, ⌘Z / ⇧⌘Z, ⌘D, Esc, and a letter per tool).
+
+The diagram is stored in the Markdown file itself, so there is no image file to keep track of. Every change is an ordinary edit to the document: it saves automatically and undoes like typing. Diagrams show in Read Mode, Quick Look, printing, and PDF, PNG, HTML, and EPUB export. One that is not valid JSON, or comes from a newer version, shows an error above its unchanged source.
+
+See [docs/floorball.md](docs/floorball.md) for the format and [samples/floorball.md](samples/floorball.md) for an example.
+
+## Team Space: a playbook shared through GitHub
+
+A Team Space is a folder that stays in sync with a GitHub repository, so a coaching staff can keep one playbook of training plans, match notes, and diagrams.
+
+1. Open **Settings → Team Space** and click **Sign in with GitHub…**. A browser page opens with a code already copied: paste it and allow access.
+2. Enter the repository as `owner/name` (or paste its github.com URL) and click **Connect**. Your account needs push access to it.
+3. Click **Show in Sidebar**. From then on, the sidebar's folder menu lists the Team Space at the top.
+
+The app checks GitHub every 15 seconds to 5 minutes (you choose), and whenever it comes to the front. Your saved changes go up as one commit per round. When someone else changed the same file, edits to different lines are combined; diagrams keep one player or arrow per line, so two coaches moving different players merge cleanly. When the same lines changed, the app asks whether to keep your version, GitHub's, or both. A push never overwrites someone else's commit.
+
+Signing in gives the app access to your repositories; the token stays in your Keychain. Hidden files such as `.github/` are not synced. See [docs/team-space.md](docs/team-space.md) for the details.
+
+## Automatic saving
+
+Edits save on their own, 2 seconds after you stop typing, so you don't need <kbd>⌘S</kbd>. Change this in **Settings → General → Automatic saving** (Instant, 30 seconds, a few minutes, or Never).
+
+## Everything from Markdown Preview
+
+The rest of the app is Markdown Preview, so it also has:
+
+- **Read and Edit Mode** — a clean preview with a document outline, and in-place editing with a formatting toolbar, task checkboxes, tables, and a plain-text Markdown source view (<kbd>⇧⌘E</kbd>).
+- **Mermaid diagrams and math** — fenced `mermaid` blocks and LaTeX math render offline.
+- **File navigator** — browse, create, and filter Markdown files in the sidebar, with favorite folders. A file inside a favorite or the Team Space opens with that whole folder in the sidebar.
+- **Search** — find text in a document (<kbd>⌘F</kbd>), or find a document by name (<kbd>⇧⌘O</kbd>).
+- **Export and print** — PDF, PNG, HTML, and EPUB, with font size and scale in the print dialog.
+- **Quick Look** — press Space on a `.md` file in Finder for a preview, diagrams included.
+- **Share as Link** — upload a document encrypted and copy a link anyone can read in a browser (see [Privacy](#privacy)).
+- **Open With and Open in LLM** — hand the file to your editor, or to Codex, Claude, or ChatGPT.
+- **Command line tools and URL scheme** — `mdp README.md` from a shell, or `md-preview://file/<path>` from a link.
+
+The [Markdown Preview README](https://github.com/pluk-inc/markdown-preview#features) describes each of these in full.
+
+Supported file types: `.md`, `.markdown`, `.mdown`, `.mdx`, `.txt` (UTI `net.daringfireball.markdown`).
 
 ## Screenshots
 
@@ -70,157 +103,64 @@ Or grab the latest signed and notarized DMG from its [Releases](https://github.c
   <img src="docs/screenshot-edit-mode.png" width="820" alt="Edit Mode with document outline and Markdown formatting toolbar" />
 </p>
 
-<p align="center">
-  <em>Quick Look preview — spacebar a <code>.md</code> in Finder:</em>
-</p>
+## Privacy
 
-<p align="center">
-  <img src="docs/screenshot-quicklook.png" width="640" alt="Quick Look preview from Finder" />
-</p>
-
-<p align="center">
-  <em>Customize the toolbar — drag in Print, Copy, Zoom and the rest from <em>View → Customize Toolbar…</em></em>
-</p>
-
-<p align="center">
-  <img src="docs/screenshot-toolbar-customize.png" width="820" alt="Native macOS toolbar customization sheet showing draggable items" />
-</p>
-
-## Features
-
-**App language:** Choose **Settings → General → Language** to use a bundled translation independently of your system language. The app offers to restart right away so the choice applies to settings, menus, and document controls; choose **Later** to keep working, and it applies the next time you open the app. **System Default** removes the app override and follows macOS again. This preference persists across launches and affects only the app; Quick Look previews continue to use their system-selected language. Available languages are discovered from the app’s bundled translations.
-
-Settings uses toolbar tabs. **General** holds the language, how files open, Always on Top, automatic saving (Instant by default: an edited document saves 2 seconds after you stop typing; choose Never to save only with ⌘S), and the app the Open button uses. **Reading** contains text size, content width, text alignment, Markdown line breaks, and outline highlighting. **Appearance** contains the light/dark choice, themes, and their font, spacing, and color customization, with a live sample; resetting a theme leaves global Reading preferences unchanged. **Advanced** holds the command line tools installer and the app link approvals.
-
-**Text alignment:** Choose **Settings → Reading → Text alignment** for Automatic, Left, Center, Right, or Justified prose. Automatic preserves the document’s existing alignment, including right-to-left text. This global preference persists across launches and theme changes, updates open reading views immediately, and applies to Quick Look when reopened. Code, tables, and explicit HTML alignment remain unchanged. Justification leaves the final paragraph line naturally aligned; enable Strict line breaks to join ordinary source wraps into flowing paragraphs.
-
-Single source newlines remain visible by default. Enable **Settings → Reading → Markdown → Strict line breaks** to let ordinary source lines flow into paragraphs in reading view and Quick Look. Two trailing spaces or a backslash still create an explicit line break; blank lines still separate paragraphs. Reopen an existing Quick Look preview after changing this setting.
-
-- **Native rendering** — `WKWebView` pipeline backed by [swift-markdown](https://github.com/swiftlang/swift-markdown), with heading anchors and link handling. Bare `http://` and `https://` URLs are clickable in the app and Quick Look previews.
-- **Read Mode** — select and copy text, follow links, and browse tables. Copying whole blocks writes their Markdown source; **Edit → Copy as Plain Text** (⌥⇧⌘C, also in the context menu) copies the text as it reads, with list bullets and numbers but no Markdown, for plain text fields. Click task checkboxes to save each change directly to the file. Tables and Quick Look previews remain read-only. Table words and inline code retain their natural widths, and in Markdown table cells Chinese and Japanese text wraps at spaces and punctuation instead of between characters; wide tables scroll horizontally. Drag the edge between two header cells to resize a column, and double-click an edge to fit that column to its header text; the widths reset when the document renders again. In Read or Edit mode, use **Expand Table** above a table to open a read-only snapshot in its own window, which you can resize, minimize, or make fullscreen. The table window opens at the document's text size, and **View → Zoom In** and **Zoom Out** change it there without changing the document. For tables with a single-row header, the header stays at the top of the table window while you scroll. Press Escape or close the table window to return to the document.
-- **App links** — Read Mode and Quick Look support custom URL schemes. Before opening an unapproved custom link with a registered app, a compact dialog names the app and offers Cancel, Allow, and Always Allow, with Cancel as the default. For an unapproved custom link with no registered app, an alert reports that no application can open the link. Use Copy Link in the context menu to inspect the destination. “Always Allow” saves approval for that URL scheme across documents, app restarts, and Quick Look. Reset approvals in Settings → Advanced → App links. HTTP, HTTPS, mailto, and the app’s own `md-preview:` links open without this prompt, even after resetting approvals. Executable URLs and literal `file://` links remain blocked; embedded resources cannot launch custom app links.
-- **Edit Mode** — edit Markdown in place with a formatting toolbar for headings, emphasis, lists, quotes, code, and links. Table cells show inline formatting until focused, then reveal their Markdown syntax for editing. Task markers become checkboxes once you finish typing the closing bracket; Enter continues a task list, and Enter on an empty task exits it. Toggle it from the toolbar or with <kbd>⌘E</kbd>, then save with <kbd>⌘S</kbd>. To edit the file as plain text, choose **View → Show Markdown Source** (<kbd>⇧⌘E</kbd>) the source button at the end of the formatting toolbar, or **Show Source** in the editor's context menu (**Show Markdown** there switches back): every Markdown marker stays visible, in a fixed-width font with line numbers, light syntax colors, and a highlight on the current line, and wrapped list items and quotations continue under their text. The switch keeps the selection, unsaved changes, and undo history, applies to every open window, and is remembered the next time you open Edit Mode. Files keep their own line endings (LF, CRLF, or CR) when saved. The editor's context menu is short: **Format** has the formatting commands, the inline styles, the code blocks, and Insert Table are one click away, and a nearby iPhone or iPad can add a photo, a scan, or a sketch, which is saved beside the file as a pasted image is (a scan of several pages keeps its first page only). In the Markdown source, the menu has **Find…** and **Navigate** (Reveal in Project Navigator, Show in Finder) instead.
-- **Mermaid diagrams** — fenced `mermaid` code blocks render as diagrams in both the app and Quick Look previews, using a bundled renderer so previews work offline without a CDN request.
-- **Floorball tactics diagrams** — fenced `floorball` code blocks draw a floorball rink (full, half, or blank) with players, goalkeepers, balls, cones, goals, markers, text, and run, pass, shot, dribble, and freehand arrows. The diagram is stored in the Markdown file as versioned JSON, so it needs no image file, survives saving and reopening, and stays editable. In Edit Mode, **Format → Insert Floorball Diagram** (also in the formatting bar's styling menu) adds an empty rink and opens the diagram editor; click any diagram to edit it again, or use **Edit Diagram** on a diagram in Read Mode. The editor has a tool palette, drag to move, path handles to bend arrows, a property bar for team, number, label, style, and color, and keyboard shortcuts (Delete, ⌘Z / ⇧⌘Z, ⌘D, Esc, and a letter per tool). Every change is an ordinary edit to the document, so it marks it unsaved, autosaves, and undoes like typing. Diagrams render in Read Mode, Quick Look, printing, and PDF, PNG, HTML, and EPUB export; one that is not valid JSON, or comes from a newer version, shows an error above its unchanged source. See [docs/floorball.md](docs/floorball.md) for the format and [samples/floorball.md](samples/floorball.md) for an example.
-- **Math equations** — LaTeX inline (`$x_1 + x_2$`), display (`$$\int_0^1 x^2\,dx$$`), and fenced `math` blocks render with bundled KaTeX in reading and edit modes. In edit mode, click a formula to edit its highlighted LaTeX source; move the caret away to render it again. Inline math source uses inline-code styling; spaces immediately inside either `$` delimiter leave the expression literal. Standalone `$$` source uses the code-block card with visible delimiters and no header controls; fenced `math` uses the usual code-block controls with hidden fences. Pressing Enter after a standalone `$$` inserts a matching closing delimiter and places the caret between them; single-line `$$ equation $$` stays on one source line. Unclosed math stays editable as source. Selecting a rendered formula and copying yields the original LaTeX source (via the official `copy-tex` extension).
-- **Document outline** — sidebar TOC that mirrors your headings; click to jump.
-- **Collapsible sidebar** — the outline and file picker hides when the sidebar collapses; the sidebar toggle stays available to reopen it.
-- **File navigator** — browse Markdown files in the sidebar. Click a folder's name, icon, or empty row space to expand or collapse it, or use its disclosure triangle. Click a file to open it in the current reading or editing mode. A file that takes a moment to load, such as one iCloud Drive is still downloading, shows a spinner beside its name until it opens. The folder button above the tree shows the folder the tree starts at; its menu lists your **Favorites** and the **Recent** folders, and adds the current folder to Favorites or removes it (also *File → Add to Favorites*, or right-click a folder in the tree). A file inside a favorite folder always opens with that whole folder in the tree, instead of only the file's own folder. The bar at the bottom has a **+** menu (New Empty File, New File from Clipboard, New Folder, Add Files to the folder) and a **Filter** field that narrows the tree to matching file names (Escape clears it); the clock button shows only recently opened files. The filter uses the same folder walk as Search for Document, so it skips the same dependency and build folders. New files and folders appear in the tree at once with their name ready to type, as in Xcode: Return keeps the typed name (a file without an extension gets `.md`), Escape keeps the default name, and a new file then opens. They go into the selected folder, or else the open file's folder. When that is a folder inside the tree's folder, the **+** menu also has New File and New Folder items for the tree's folder itself. If the app has no write access to that folder (for example, when you opened a single file from it), it asks once for access to the project folder and remembers it, so later launches do not ask again.
-- **Loading feedback** — while a file takes a moment to load, a Loading panel with a spinner sits in the middle of the window until the page appears. This includes files opened from a link or with Back and Forward, not just from the sidebar. A document that is still downloading — a shared link, or the release notes — opens its window or tab at once and shows the same panel there until the document arrives.
-- **Inspector panel** — toggleable side panel with file metadata.
-- **In-document search** — toolbar search field plus standard <kbd>⌘F</kbd> / <kbd>⌘G</kbd> / <kbd>⌘⇧G</kbd> for next/previous match.
-- **Search for Document** — find a file by name, as against searching inside one. <kbd>⇧⌘O</kbd>, or a toolbar button you can drag in via *View → Customize Toolbar…*, opens a draggable floating palette over the current document, with native Liquid Glass on macOS 26 and later (Escape or clicking outside dismisses it); the palette remembers where you drag it relative to the document window and stays on that window’s current screen; the empty query shows up to 10 recently opened files across folders, newest first, including when no document is open. Typing keeps matching recents above project file results without duplicates; clearing the query restores recents. History persists across launches and follows *File → Open Recent → Clear Menu*. Results update in place when each search finishes, with the matched letters picked out in bold and a breadcrumb path beneath each filename. <kbd>↑</kbd> and <kbd>↓</kbd> move through the results (<kbd>Home</kbd>, <kbd>End</kbd>, <kbd>Page Up</kbd> and <kbd>Page Down</kbd> work too). <kbd>↩</kbd> opens the highlighted file in the current tab, <kbd>⌘↩</kbd> in a new tab, <kbd>⌥↩</kbd> in a new window. It searches the folder the sidebar has mounted and recognizes the same Markdown extensions as the navigator, but leaves out dependency and build folders (`node_modules`, `vendor`, `build`, `DerivedData`, `Pods`, `target`, and similar), the contents of packages such as `.app` or `.rtfd` bundles, and folders more than 12 levels deep. In very large projects it indexes the first 20,000 files and says so.
-- **Open With** — switch to your real editor (VS Code, Cursor, Zed, Sublime, BBEdit, Nova, CotEditor, TextMate, MacVim, Xcode, TextEdit) without leaving the preview. The list filters to apps that actually declare an editor role for Markdown, and remembers your pick.
-- **Open in LLM** — send the current Markdown file to Codex, Claude, or ChatGPT from the toolbar. Supported apps open with file or folder context where possible, with a copy-and-open fallback for longer prompts.
-- **Text zoom** — bump text up or down in Read or Edit mode with the toolbar's <kbd>A A</kbd> control or <kbd>⌘+</kbd> / <kbd>⌘−</kbd> / <kbd>⌘0</kbd>, or pinch the trackpad in Read mode. Discrete Safari-style stops from 50% to 300%.
-- **Paper printing** — the Markdown Preview pane in the print dialog provides Font Size (6–48 pt) and Scale (50–200%). Scaling refits tables before pagination and updates the native preview. Font Size is remembered; Scale applies to the current print dialog. PDF and PNG exports preserve the preview’s appearance.
-- **EPUB export** — *File → Export…* offers **EPUB Book** alongside PDF, HTML, and PNG, for reading long documents in Apple Books or on an e-reader, where the reader sets the text size and spacing. The book is split into sections at the shallowest heading level that repeats, with a table of contents built from the headings. Images are embedded, Mermaid diagrams become pictures, math is exported as MathML, and `title`, `author`, and `lang` frontmatter name the book. Typeface and page colours come from the reading app, not the preview’s theme.
-- **Customizable toolbar** — drag in the items you actually use (Print, Copy, Zoom, Sidebar, Open With, Inspector, Share, Search, Search for Document) via *View → Customize Toolbar…* Standard AppKit affordance, your layout sticks across launches.
-- **Share = copy the source** — the share toolbar feeds the picker the Markdown text itself, so **Copy** writes the raw source to the clipboard (great for pasting into ChatGPT / Claude), and Mail, Messages, and Notes get the content in the body instead of a file URL. The popover header shows the file name, word count, and size, and **Export** and **Print** sit above the system services.
-- **Team Space (GitHub sync)** — *Settings → Team Space* signs in with GitHub and connects a repository. Its files sync into a Team Space folder, which the sidebar's folder menu lists first. The app checks GitHub every 15 seconds to 5 minutes (you choose), and also when it comes to the front, and pushes local changes as one commit per round. When a file changed both here and on GitHub, edits to different lines are combined. When the same lines changed, the app asks whether to keep your version, GitHub's, or both. Hidden files such as `.github/` are not synced. See [docs/team-space.md](docs/team-space.md).
-- **Share as Link** — *File → Share as Link…* or the Share popover uploads the document and copies a link that anyone can read in a browser, or in the app if they have it. Links last 7 days, carry the document's images, and the document is updated behind the same link when you share it again. *File → Manage Shared Document…* copies the link again or stops sharing. See [Share links](#share-links) for what the server can see.
-- **Quick Look extension** — system-wide `.md` previews from Finder spacebar, Spotlight, and Mail attachments without launching the app.
-- **Command line tools** — install `mdp`, `md-preview`, and `markdown-preview` from the app menu, then open files or folders from any shell with commands like `mdp README.md` or `mdp .`.
-- **URL scheme** — open a file or folder from a browser link or another app with `md-preview://file/<absolute path>` (e.g. `md-preview://file/Users/me/project/README.md`), the same shape as `cursor://file/…`. Percent-encode special characters in the path (a space becomes `%20`).
-- **Default handler** — offers to register itself as the default `.md` opener on first launch.
-- **Fast opening** — a document you open again shows its first screen at once from a saved image while the page loads (documents that look final on first paint, so not ones with images, math, Mermaid diagrams, or code highlighted after load); the app keeps the images for the 40 most recent documents in its own cache, and they never leave your Mac.
-
-## Supported file types
-
-`.md`, `.markdown`, `.mdown`, `.mdx`, `.txt`
-UTI: `net.daringfireball.markdown`
-
-## Requirements
-
-- macOS 15 or later
-- Apple Silicon or Intel
+- **No crash reports, no analytics, no update checks.** The app has no Sentry DSN and no PostHog token, and Sparkle never starts. Settings → Privacy still shows those switches from the original app, but there is nothing behind them.
+- **Team Space** talks only to GitHub, with your own account.
+- **Share as Link** uses the original project's server, `md-preview.app`, on Cloudflare. The document is encrypted on your Mac (AES-256-GCM) before upload, and the key is only in the part of the link after `#`, which browsers never send to a server, so the server cannot read the document, its title, or its images. It does see who connects (IP address), how large each share is, and when it was made and expires. Anyone with the full link can read the document until it expires after 7 days or you stop sharing it.
 
 ## Building from source
 
 ```sh
-git clone git@github.com:pluk-inc/markdown-preview.git
-cd markdown-preview
-open markdown-preview.xcodeproj
+git clone https://github.com/FabioLiberto/markdown-preview-floorball-extension.git
+cd markdown-preview-floorball-extension
+open md-preview.xcodeproj
 ```
 
-Build and run the `markdown-preview` scheme. Swift Package Manager will resolve [Sparkle](https://github.com/sparkle-project/Sparkle), [Sentry](https://github.com/getsentry/sentry-cocoa), and [swift-markdown](https://github.com/swiftlang/swift-markdown) on first build.
+Build and run the `md-preview` scheme. Swift Package Manager resolves [swift-markdown](https://github.com/swiftlang/swift-markdown), [Sparkle](https://github.com/sparkle-project/Sparkle), and [Sentry](https://github.com/getsentry/sentry-cocoa) on the first build. The project's signing team belongs to the original project; without its certificate, build from the command line with ad hoc signing:
 
-### Crash reporting
+```sh
+xcodebuild -project md-preview.xcodeproj -scheme md-preview -configuration Debug \
+  CODE_SIGN_IDENTITY=- DEVELOPMENT_TEAM= CODE_SIGN_STYLE=Manual build
+```
 
-Markdown Preview Floorball has no Sentry DSN in its `Info.plist`, so it sends no crash reports. The rest of this section describes the original app: its release builds submit native crash reports to the `pluk-inc/markdown-preview` Sentry project. The integration does not collect performance traces, session data, breadcrumbs, network requests, user information, document contents, or file paths. Users can turn reporting off in Markdown Preview > Settings > Privacy; on later launches, the Sentry SDK will not initialize at all.
+Run the tests with `swift test --package-path tests/swift-tests --parallel`.
 
-The committed DSN is a public client key. Release archives upload the app dSYM with `sentry-cli`; authenticate locally with `sentry-cli login` and keep that authentication token outside the repository.
+## Making a release
 
-### Anonymous usage analytics
+1. Raise `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `Version.xcconfig`.
+2. Run `scripts/package-fork.sh`. It builds a Release copy signed ad hoc and prints the path of the zip, `build/Markdown-Preview-Floorball-<version>.zip`.
+3. Publish it with a tag of the form `v<version>`, which What's New in the app reads:
 
-Release builds can submit at most one anonymous `app became active` event per installation per UTC day when Markdown Preview becomes active. The event contains a random installation identifier, app version, macOS version, processor architecture, locale country or region, system language (the first language in System Settings, without its region, such as `de` or `zh-Hans`), and the flag that prevents PostHog from creating a person profile. It is used to count daily and monthly active installations, understand basic platform compatibility, and choose which languages to translate the app into. It does not contain document contents, file names or paths, actions, screens, precise location, personal information, or advertising identifiers. Users can disable it from Settings > Privacy.
+   ```sh
+   gh release create v<version> build/Markdown-Preview-Floorball-<version>.zip --title "Markdown Preview Floorball <version>"
+   ```
 
-The PostHog project token is injected from the gitignored `Secrets.xcconfig`. Copy `Secrets.xcconfig.example` to `Secrets.xcconfig` and set `POSTHOG_PROJECT_TOKEN` before making a release build. If the token is absent, or for a Debug build, analytics remains disabled. Every event disables GeoIP enrichment, and the PostHog project must also be configured to discard IP data in Project Settings > General.
-
-### Share links
-
-Share as Link encrypts the document on your Mac (AES-256-GCM) before it is uploaded to `md-preview.app`, which runs on Cloudflare. The key is only in the part of the link after `#`, which browsers never send to a server, so the server stores only encrypted bytes and cannot read the document, its title, or its images. Anyone who has the full link can read the document until it expires after 7 days or you stop sharing it. The server does see who connects (IP address), how large each share is, and when it was made and when it expires, and it keeps no account. The web viewer is a page that `md-preview.app` serves, so you trust that page as you trust any web-based encrypted paste service: a changed viewer page could read the documents it opens.
+The `release.sh` and `rollback-release.sh` scripts in `scripts/` belong to the original project's release process (Amore, notarization, Sparkle appcast) and are not used here.
 
 ## Project layout
 
 ```
-md-preview/         Main app target (AppKit, WKWebView)
-quick-look/         Quick Look extension (.appex)
-scripts/            Release & rollback automation
-Version.xcconfig    Marketing & build version (single source of truth)
-appcast.xml         Sparkle update feed
+md-preview/                   Main app target (AppKit, WKWebView)
+md-preview/Features/TeamSpace GitHub sync
+scripts/editor-bundle/floorball/  Floorball diagram renderer and editor
+quick-look/                   Quick Look extension (.appex)
+tests/swift-tests/            Swift tests (SPM package over the app's sources)
+docs/                         Floorball format and Team Space docs
+Version.xcconfig              Marketing & build version
 ```
 
-## Releasing
+## Credits
 
-Releases are driven by [Amore](http://amore.computer/) — it handles building, code signing, notarization, DMG creation, S3 upload, and Sparkle appcast publishing in one shot.
+Markdown Preview Floorball is built on [Markdown Preview](https://github.com/pluk-inc/markdown-preview) by [Pluk](https://pluk.sh) and its contributors. If the original app is useful to you, consider [buying them a coffee](https://buymeacoffee.com/pluk).
 
-To prepare a release PR, start from latest `main`, update both `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` in `Version.xcconfig`, and add the matching `CHANGELOG.md` entry with contributor credits. Submit these together in a ready PR; see the [release-process skill](.agents/skills/release-process/SKILL.md) for naming and validation.
+It also uses:
 
-When ready to publish the prepared release, run the following from a clean working tree. This builds, notarizes, uploads, tags, and publishes the release:
-
-```sh
-./scripts/release.sh
-```
-
-Use `./scripts/rollback-release.sh` to revert the appcast pointer if a release misbehaves.
-
-### Contributing
-
-
-Pull requests are welcome. For larger changes, please open an issue first to discuss what you'd like to change.
-
-1. Fork the repo and create your branch from `main`.
-2. Run the app and verify the change end-to-end (UI changes need a manual smoke test — there's no UI test suite yet).
-3. Keep PRs focused; one logical change per PR.
-4. Match the existing Swift style (no formatter is enforced; mirror nearby code).
-
-<h2 align="center" style="color: #8a8a8a;">Special Sponsor</h2>
-
-<br />
-
-<p align="center">
-  <a href="https://pluk.sh"><img src="docs/sponsors/pluk-logo.png" height="54" alt="Pluk" /></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://amore.computer"><img src="docs/sponsors/amore-logo.png" height="54" alt="Amore" /></a>
-  &nbsp;&nbsp;&nbsp;&nbsp;
-  <a href="https://lokalise.com"><img src="docs/sponsors/lokalise-logo.png" height="54" alt="Lokalise" /></a>
-</p>
-
-## Support
-
-Markdown Preview is free and MIT-licensed. If it saved you a browser tab, you can [buy us a coffee](https://buymeacoffee.com/pluk).
-
-## Acknowledgments
-- [Amore](http://amore.computer/) — MacOS release automation (signing, notarization, DMG, hosting, appcast)
-- [Lokalise](https://lokalise.com) — Translation management for the app's languages
 - [swift-markdown](https://github.com/swiftlang/swift-markdown) — Markdown parser (Apple, cmark-gfm-backed)
-- [Pele](https://pele.run/) — Bundled renderer for Mermaid diagrams in `mermaid` fenced code blocks
-- [KaTeX](https://katex.org/) — Bundled math typesetter for inline `$…$`, display `$$…$$`, and ` ```math ` blocks
-- [Sparkle](https://sparkle-project.org) — Auto-update framework
-- [Sentry](https://sentry.io) — Privacy-filtered native crash reporting
-- [LottieFiles](https://lottiefiles.com/) — Animated README logo
+- [Pele](https://pele.run/) — bundled renderer for Mermaid diagrams
+- [KaTeX](https://katex.org/) — bundled math typesetter
+- [Sparkle](https://sparkle-project.org) and [Sentry](https://sentry.io) — included from the original app, switched off in this one
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE), as the original project.

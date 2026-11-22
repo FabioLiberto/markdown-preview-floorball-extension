@@ -966,6 +966,26 @@ final class ProjectNavigatorView: NSView {
         pasteboard.setString(url.path, forType: .string)
     }
 
+    /// Moves a file or folder to the Trash, as Finder does, so it can be put
+    /// back. Documents showing it close first: the window would otherwise
+    /// follow the file into the Trash. When that leaves no window, the
+    /// tree's folder opens again so the sidebar stays.
+    @objc private func moveToTrash(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? URL else { return }
+        let root = rootNode?.url
+        withWriteAccess(to: url.deletingLastPathComponent(), {
+            try FileManager.default.trashItem(at: url, resultingItemURL: nil)
+        }, then: { _ in
+            for document in NSDocumentController.shared.documents
+            where document.fileURL?.isDescendantOrSame(of: url) == true {
+                document.close()
+            }
+            if NSDocumentController.shared.documents.isEmpty, let root, root.isExistingDirectory {
+                appDelegate?.openFolder(root)
+            }
+        })
+    }
+
     @objc private func copyContents(_ sender: NSMenuItem) {
         guard let url = sender.representedObject as? URL else { return }
         Task { @concurrent in
@@ -1051,6 +1071,11 @@ extension ProjectNavigatorView: NSMenuDelegate {
         menu.addItem(makeMenuItem(title: NSLocalizedString("Copy Path", comment: "Project navigator context menu"),
                                   symbol: "document.on.document",
                                   action: #selector(copyPath(_:)),
+                                  url: url))
+        menu.addItem(.separator())
+        menu.addItem(makeMenuItem(title: NSLocalizedString("Move to Trash", comment: "Project navigator context menu"),
+                                  symbol: "trash",
+                                  action: #selector(moveToTrash(_:)),
                                   url: url))
     }
 

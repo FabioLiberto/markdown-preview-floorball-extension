@@ -34,6 +34,11 @@ synced commit, the folder, and the default branch on GitHub.
   yours as `<name> (GitHub).md`. Until you choose, the file stays as it is
   on both sides. *Settings → Team Space* lists open conflicts.
 
+A file you delete in the folder, for example with **Move to Trash** in the
+sidebar, is deleted on GitHub in the next round; its earlier versions stay in
+the repository's history. A file someone deletes on GitHub disappears from
+the folder.
+
 Local changes go up as one commit per round, named after the files and the
 Mac. A commit only moves the branch forward. If someone pushed in the
 meantime, the round reads the branch again and retries, so it never

@@ -454,7 +454,7 @@ final class ProjectNavigatorView: NSView {
             ? NSLocalizedString("New Folder", comment: "Name of a new folder made from the project navigator")
             : NSLocalizedString("Untitled", comment: "Name of a new Markdown file made from the project navigator")
         let create = { () throws -> URL in
-            let url = Self.uniqueURL(in: folder, base: base, extension: isFolder ? nil : "md")
+            let url = folder.uniqueChild(named: base, extension: isFolder ? nil : "md")
             if let contents {
                 try contents.write(to: url, options: .withoutOverwriting)
             } else {
@@ -488,7 +488,7 @@ final class ProjectNavigatorView: NSView {
             self.withWriteAccess(to: folder, {
                 while let source = remaining.first {
                     let name = source.deletingPathExtension().lastPathComponent
-                    let target = Self.uniqueURL(in: folder, base: name, extension: source.pathExtension)
+                    let target = folder.uniqueChild(named: name, extension: source.pathExtension)
                     try FileManager.default.copyItem(at: source, to: target)
                     remaining.removeFirst()
                 }
@@ -657,20 +657,6 @@ final class ProjectNavigatorView: NSView {
             return currentFileURL.deletingLastPathComponent()
         }
         return rootNode?.url
-    }
-
-    private static func uniqueURL(in folder: URL, base: String, extension ext: String?) -> URL {
-        func url(_ name: String) -> URL {
-            guard let ext, !ext.isEmpty else { return folder.appending(path: name, directoryHint: .isDirectory) }
-            return folder.appending(path: "\(name).\(ext)")
-        }
-        var candidate = url(base)
-        var number = 2
-        while FileManager.default.fileExists(atPath: candidate.path) {
-            candidate = url("\(base) \(number)")
-            number += 1
-        }
-        return candidate
     }
 
     // MARK: - Folder watching
@@ -925,10 +911,8 @@ final class ProjectNavigatorView: NSView {
         var rootItem: NSMenuItem?
         defer { if let rootItem { folderPopUp.select(rootItem) } }
 
-        // The Team Space first, while a repository is connected, and only
-        // there.
-        let teamFolder = TeamSpace.shared.folderURL?.standardizedFileURL
-        if let teamFolder, teamFolder.isExistingDirectory {
+        // The Team Space first, while a repository is connected.
+        if let teamFolder = TeamSpace.shared.folderURL?.standardizedFileURL, teamFolder.isExistingDirectory {
             menu.addItem(.sectionHeader(title: NSLocalizedString("Team Space", comment: "Project navigator root menu section")))
             let item = folderMenuItem(teamFolder)
             if teamFolder == root { rootItem = item }
@@ -937,7 +921,7 @@ final class ProjectNavigatorView: NSView {
         }
 
         // Favorites next. A root that is a favorite shows there only.
-        let favorites = FavoriteFolders.all.filter { $0.isExistingDirectory && $0 != teamFolder }
+        let favorites = FavoriteFolders.all.filter(\.isExistingDirectory)
         if !favorites.isEmpty {
             menu.addItem(.sectionHeader(title: NSLocalizedString("Favorites", comment: "Project navigator root menu section")))
             for favorite in favorites {
@@ -949,7 +933,7 @@ final class ProjectNavigatorView: NSView {
 
         // Then the folders shown last. A root that is not a favorite is
         // the newest of them.
-        let recents = RecentFolders.menuFolders(root: root, favorites: favorites).filter { $0 != teamFolder }
+        let recents = RecentFolders.menuFolders(root: root, favorites: FavoriteFolders.pinnedRoots)
         if !recents.isEmpty {
             if !favorites.isEmpty { menu.addItem(.separator()) }
             menu.addItem(.sectionHeader(title: NSLocalizedString("Recent", comment: "Project navigator root menu section")))

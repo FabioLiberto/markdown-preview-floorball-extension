@@ -19,7 +19,7 @@ struct AboutSettingsView: View {
                         .textSelection(.enabled)
                     if UpdateController.isEnabled {
                         Button(L("Check for Updates")) {
-                            appDelegate?.updaterController.updater.checkForUpdates()
+                            appDelegate?.checkForUpdates(nil)
                         }
                     }
                 }
@@ -47,7 +47,7 @@ struct AboutSettingsView: View {
 
             LabeledContent(columnLabel("Links")) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Link(L("GitHub Project"), destination: URL(string: "https://github.com/FabioLiberto/markdown-preview-floorball-extension")!)
+                    Link(L("GitHub Project"), destination: ReleaseNotesFormatter.repository)
                     Link(L("Discord Community"), destination: URL(string: "https://discord.com/invite/NUtNMK7re2")!)
                     Link(L("Buy Me a Coffee"), destination: BuyMeACoffee.url)
                 }

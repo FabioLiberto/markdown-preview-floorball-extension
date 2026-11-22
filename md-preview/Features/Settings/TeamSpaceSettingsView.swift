@@ -67,17 +67,16 @@ struct TeamSpaceSettingsView: View {
                             HStack {
                                 Text(conflict.path).lineLimit(1).truncationMode(.middle)
                                 Spacer()
-                                Button(L("Keep Mine")) { teamSpace.resolve(conflict, with: .keepLocal) }
-                                Button(L("Keep GitHub’s")) { teamSpace.resolve(conflict, with: .keepRemote) }
-                                Button(L("Keep Both")) { teamSpace.resolve(conflict, with: .keepBoth) }
+                                ForEach(TeamSpaceSyncEngine.Resolution.allCases, id: \.self) { resolution in
+                                    Button(resolution.title) { teamSpace.resolve(conflict, with: resolution) }
+                                }
                             }
                             .controlSize(.small)
                         }
                     }
                     HStack {
                         Button(L("Sync Now")) { teamSpace.syncNow() }
-                            .disabled(teamSpace.repository == nil || !teamSpace.isSignedIn
-                                || teamSpace.status == .syncing)
+                            .disabled(!teamSpace.canSync || teamSpace.status == .syncing)
                         Button(L("Show in Sidebar")) { teamSpace.showInSidebar() }
                             .disabled(teamSpace.repository == nil)
                     }

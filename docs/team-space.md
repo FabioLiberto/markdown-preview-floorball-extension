@@ -11,7 +11,8 @@ staff can keep one playbook of Markdown files and floorball diagrams.
 2. Enter the repository as `owner/name`, or paste its github.com URL, and
    click **Connect**. Your account needs push access.
 3. **Show in Sidebar** opens the folder. Later, the sidebar's folder menu
-   lists it at the top, under *Team Space*.
+   lists it at the top, under *Team Space*, and a file inside it opens with
+   the whole Team Space in the sidebar, as a file in a favorite does.
 
 The folder is
 `~/Library/Containers/io.github.fabioliberto.md-preview-floorball/Data/Library/Application Support/Team Space/<name>`.

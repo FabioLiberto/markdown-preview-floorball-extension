@@ -65,10 +65,8 @@ nonisolated struct GitHubClient: Sendable {
     // MARK: - Account
 
     func login() async throws -> String {
-        let data = try await send(request("user"))
-        guard let login = (try? JSONDecoder().decode([String: AnyDecodable].self, from: data))?["login"]?.string
-        else { throw Failure.invalidResponse }
-        return login
+        struct Body: Decodable { let login: String }
+        return try decode(Body.self, from: try await send(request("user"))).login
     }
 
     func repository(_ fullName: String) async throws -> Repository {

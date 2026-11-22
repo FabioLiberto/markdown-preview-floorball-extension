@@ -33,7 +33,7 @@ enum ReleaseNotes {
     static let historyFile = directory.appending(path: "history.md")
 
     /// The releases page, for when the notes cannot be downloaded.
-    static let webURL = URL(string: "https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases")!
+    static let webURL = ReleaseNotesFormatter.repository.appending(path: "releases")
 
     /// The running app's version, `MARKETING_VERSION`.
     static var currentVersion: String {
@@ -385,7 +385,8 @@ enum ReleaseNotes {
     }
 
     /// Ends in "/" so relative paths resolve inside it.
-    nonisolated private static let repositoryAPI = URL(string: "https://api.github.com/repos/FabioLiberto/markdown-preview-floorball-extension/")!
+    nonisolated private static let repositoryAPI = URL(string: "https://api.github.com/repos")!
+        .appending(path: ReleaseNotesFormatter.repository.path(), directoryHint: .isDirectory)
 
     nonisolated private struct Release: Decodable, Sendable {
         let tagName: String

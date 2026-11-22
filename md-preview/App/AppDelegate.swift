@@ -172,7 +172,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         installAppMenuItems()
         installReleaseNotesMenuItem()
         installViewMenuItemIcons()
-        TeamSpace.shared.start()
         hasFinishedLaunching = true
         if !didReceiveOpenURLsDuringLaunch && !launchedAsLoginItem {
             scheduleDocumentPrompt(requiresNoDocuments: true)
@@ -186,8 +185,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         }
     }
 
-    /// Sparkle and Sentry both do XPC and file work at start; neither is
-    /// needed for the first frame. Idempotent, so an early caller (Check for
+    /// Sparkle, Sentry, and the Team Space do XPC, Keychain, and file work
+    /// at start; none is needed for the first frame. Idempotent, so an early caller (Check for
     /// Updates…) can run it ahead of the launch timer.
     func startDeferredLaunchServices() {
         guard !didStartDeferredLaunchServices else { return }
@@ -195,6 +194,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         LaunchSignposts.interval("deferredServices") {
             updaterController.startUpdater()
             CrashReporter.start()
+            TeamSpace.shared.start()
             // Capture launch settings before another instance can change
             // them while we're inactive, even if this user never opens the
             // Settings window. Creating the model reads every setting and
@@ -811,7 +811,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         case #selector(checkForUpdates(_:)):
             // Before the updater starts, the click starts it; afterwards
             // Sparkle decides (a check may already be running).
-            return !didStartDeferredLaunchServices || updaterController.updater.canCheckForUpdates
+            return UpdateController.isEnabled
+                && (!didStartDeferredLaunchServices || updaterController.updater.canCheckForUpdates)
         case #selector(toggleSidebarFromMenu(_:)),
              #selector(hideSidebarFromMenu(_:)),
              #selector(selectOutlineMode(_:)),

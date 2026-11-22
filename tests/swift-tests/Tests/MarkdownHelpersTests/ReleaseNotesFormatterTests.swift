@@ -96,7 +96,7 @@ final class ReleaseNotesFormatterTests: XCTestCase {
         let release = ReleaseNotesFormatter.Release(version: "0.0.9", name: nil, date: date("2026-01-20T10:00:00Z"),
                                                     body: "- **Big.** Many changes (\(links)).")
         let markdown = ReleaseNotesFormatter.document([release])
-        XCTAssertTrue(markdown.contains("[#4](https://github.com/o/r/pull/4) [+2](https://github.com/pluk-inc/markdown-preview/releases/tag/v0.0.9)</span>"))
+        XCTAssertTrue(markdown.contains("[#4](https://github.com/o/r/pull/4) [+2](https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases/tag/v0.0.9)</span>"))
         XCTAssertFalse(markdown.contains("[#5]"))
     }
 

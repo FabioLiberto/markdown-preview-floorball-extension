@@ -150,15 +150,16 @@ final class ShareLinkStore {
     }
 }
 
-/// Generic-password items under one service, keyed by share ID.
+/// Generic-password items under one service: share keys by share ID, and
+/// (with `TeamSpace.keychainService`) the GitHub token.
 nonisolated enum ShareLinkKeychain {
 
     static let service = "doc.md-preview.share-link"
 
     /// Nil only when there is no item, so a locked or failing Keychain is
     /// not taken for a lost key.
-    static func read(account: String) throws -> Data? {
-        var query = baseQuery(account: account)
+    static func read(account: String, service: String = service) throws -> Data? {
+        var query = baseQuery(account: account, service: service)
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
         var result: AnyObject?
@@ -170,9 +171,9 @@ nonisolated enum ShareLinkKeychain {
         return result as? Data
     }
 
-    static func write(_ data: Data, account: String) throws {
-        delete(account: account)
-        var item = baseQuery(account: account)
+    static func write(_ data: Data, account: String, service: String = service) throws {
+        delete(account: account, service: service)
+        var item = baseQuery(account: account, service: service)
         item[kSecValueData as String] = data
         item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         let status = SecItemAdd(item as CFDictionary, nil)
@@ -181,11 +182,11 @@ nonisolated enum ShareLinkKeychain {
         }
     }
 
-    static func delete(account: String) {
-        SecItemDelete(baseQuery(account: account) as CFDictionary)
+    static func delete(account: String, service: String = service) {
+        SecItemDelete(baseQuery(account: account, service: service) as CFDictionary)
     }
 
-    private static func baseQuery(account: String) -> [String: Any] {
+    private static func baseQuery(account: String, service: String) -> [String: Any] {
         [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,

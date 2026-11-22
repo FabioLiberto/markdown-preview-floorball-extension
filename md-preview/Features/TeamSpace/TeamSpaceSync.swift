@@ -83,11 +83,19 @@ actor TeamSpaceSyncEngine {
         var conflicts: [TeamSpaceConflict] = []
     }
 
-    enum Resolution: Sendable {
+    enum Resolution: CaseIterable, Sendable {
         case keepLocal
         case keepRemote
         /// The branch's version is saved next to the file as a copy.
         case keepBoth
+
+        nonisolated var title: String {
+            switch self {
+            case .keepLocal: NSLocalizedString("Keep Mine", comment: "Team Space conflict button")
+            case .keepRemote: NSLocalizedString("Keep GitHub’s", comment: "Team Space conflict button")
+            case .keepBoth: NSLocalizedString("Keep Both", comment: "Team Space conflict button")
+            }
+        }
     }
 
     /// GitHub's blob limit is 100 MB; larger files stay local.
@@ -155,24 +163,25 @@ actor TeamSpaceSyncEngine {
             return try await startRepository(local)
         }
 
-        let head: String, tree: String, remote: [String: String], modes: [String: String]
-        switch ref {
-        case .notModified where local == state.files:
+        var movedTo: String?
+        if case .head(let sha, let etag) = ref {
+            state.etag = etag
+            if sha != state.commit { movedTo = sha }
+        } else if local == state.files {
             return Report()
-        case .head(let sha, let etag) where sha != state.commit:
-            head = sha
-            tree = try await client.tree(ofCommit: sha, in: repo)
-            let entries = try await client.blobs(inTree: tree, in: repo).filter {
+        }
+
+        let head: String, tree: String, remote: [String: String], modes: [String: String]
+        if let movedTo {
+            head = movedTo
+            tree = try await client.tree(ofCommit: movedTo, in: repo)
+            let entries = Dictionary(try await client.blobs(inTree: tree, in: repo).filter {
                 ($0.mode == "100644" || $0.mode == "100755") && !Self.isHidden($0.path)
                     && ($0.size ?? 0) <= Self.maxFileSize
-            }
-            remote = Dictionary(entries.map { ($0.path, $0.sha) }, uniquingKeysWith: { a, _ in a })
-            modes = Dictionary(entries.map { ($0.path, $0.mode) }, uniquingKeysWith: { a, _ in a })
-            state.etag = etag
-        case .head(_, let etag):
-            state.etag = etag
-            fallthrough
-        default:
+            }.map { ($0.path, $0) }, uniquingKeysWith: { a, _ in a })
+            remote = entries.mapValues(\.sha)
+            modes = entries.mapValues(\.mode)
+        } else {
             // The branch is where the last round left it.
             guard let commit = state.commit, let lastTree = state.tree else {
                 state.etag = nil
@@ -183,7 +192,9 @@ actor TeamSpaceSyncEngine {
 
         var plan = TeamSpaceSyncPlan(base: state.files, local: local, remote: remote)
         var report = Report()
-        var newBase = plan.inSync
+        // Starts as the last base; each path changes only once it synced.
+        var newBase = state.files.merging(plan.inSync) { $1 }
+        for path in state.files.keys where local[path] == nil && remote[path] == nil { newBase[path] = nil }
         var localContents: [String: Data] = [:]
 
         for path in plan.bothChanged.sorted() {
@@ -194,17 +205,14 @@ actor TeamSpaceSyncEngine {
                 report.received.append(path)
             } else {
                 report.conflicts.append(TeamSpaceConflict(path: path, remoteSHA: remote[path], localSHA: local[path]))
-                if let base = state.files[path] { newBase[path] = base }
             }
         }
 
-        for (path, sha) in plan.download.sorted(by: { $0.key < $1.key }) {
+        let downloads = plan.download.sorted { $0.key < $1.key }
+        let blobs = try await concurrently(downloads) { [client, repo] in try await client.blob($0.value, in: repo) }
+        for ((path, sha), data) in zip(downloads, blobs) {
             // Edited since the scan: the next round sees it as both changed.
-            guard currentSHA(path) == local[path] else {
-                if let base = state.files[path] { newBase[path] = base }
-                continue
-            }
-            let data = try await client.blob(sha, in: repo)
+            guard currentSHA(path) == local[path] else { continue }
             try write(data, to: fileURL(path))
             try write(data, to: baseURL(path))
             newBase[path] = sha
@@ -213,16 +221,20 @@ actor TeamSpaceSyncEngine {
         for path in plan.deleteLocally.sorted() where currentSHA(path) == local[path] {
             try? FileManager.default.removeItem(at: fileURL(path))
             try? FileManager.default.removeItem(at: baseURL(path))
+            newBase[path] = nil
             report.received.append(path)
         }
 
         var newHead = head, newTree = tree
         if plan.hasRemoteChanges {
+            let uploads = plan.upload.sorted()
+            for path in uploads where localContents[path] == nil {
+                localContents[path] = try Data(contentsOf: fileURL(path))
+            }
+            let contents = uploads.map { localContents[$0]! }
+            let shas = try await concurrently(contents) { [client, repo] in try await client.createBlob($0, in: repo) }
             var changes: [GitHubClient.TreeChange] = []
-            for path in plan.upload.sorted() {
-                let data = try localContents[path] ?? Data(contentsOf: fileURL(path))
-                localContents[path] = data
-                let sha = try await client.createBlob(data, in: repo)
+            for (path, sha) in zip(uploads, shas) {
                 changes.append(.init(path: path, mode: modes[path] ?? "100644", sha: sha))
                 newBase[path] = sha
             }
@@ -249,6 +261,21 @@ actor TeamSpaceSyncEngine {
         state.files = newBase
         try saveState()
         return report
+    }
+
+    /// GitHub calls for many files, a few at a time; results in input order.
+    private func concurrently<Item: Sendable, Result: Sendable>(
+        _ items: [Item], _ call: @escaping @Sendable (Item) async throws -> Result
+    ) async throws -> [Result] {
+        try await withThrowingTaskGroup(of: (Int, Result).self) { group in
+            var results = [Result?](repeating: nil, count: items.count)
+            for (index, item) in items.enumerated() {
+                if index >= 6, let (done, result) = try await group.next() { results[done] = result }
+                group.addTask { (index, try await call(item)) }
+            }
+            for try await (done, result) in group { results[done] = result }
+            return results.map { $0! }
+        }
     }
 
     /// An empty repository takes no Git Data API calls; its first file goes
@@ -281,7 +308,8 @@ actor TeamSpaceSyncEngine {
         guard let enumerator = FileManager.default.enumerator(
             at: folder, includingPropertiesForKeys: keys, options: [.skipsHiddenFiles, .skipsPackageDescendants])
         else { return result }
-        // Resolved on both sides: a temporary folder under /var is /private/var.
+        // Resolved on both sides: the enumerator reports a folder under
+        // /private/var as /var, even when given the resolved path.
         let rootLength = folder.resolvingSymlinksInPath().path.count + 1
         for case let url as URL in enumerator {
             let values = try url.resourceValues(forKeys: Set(keys))
@@ -313,17 +341,8 @@ actor TeamSpaceSyncEngine {
     private func baseURL(_ path: String) -> URL { stateFolder.appending(path: "base").appending(path: path) }
 
     private func copyURL(for url: URL) -> URL {
-        let name = url.deletingPathExtension().lastPathComponent
-        let ext = url.pathExtension
-        var copy = url
-        var number = 1
-        repeat {
-            let suffix = number == 1 ? " (GitHub)" : " (GitHub \(number))"
-            copy = url.deletingLastPathComponent()
-                .appending(path: name + suffix + (ext.isEmpty ? "" : ".\(ext)"))
-            number += 1
-        } while FileManager.default.fileExists(atPath: copy.path)
-        return copy
+        url.deletingLastPathComponent().uniqueChild(
+            named: url.deletingPathExtension().lastPathComponent + " (GitHub)", extension: url.pathExtension)
     }
 
     private func write(_ data: Data, to url: URL) throws {

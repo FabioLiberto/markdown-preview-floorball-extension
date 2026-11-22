@@ -10,6 +10,7 @@
 //
 
 import AppKit
+import SystemConfiguration
 
 @MainActor @Observable
 final class TeamSpace {
@@ -19,6 +20,10 @@ final class TeamSpace {
     /// The public Client ID of the GitHub OAuth App with device flow on.
     /// It is not a secret; device flow needs no client secret.
     static let clientID = "Ov23li97wPym8aCJy70F"
+
+    /// The token's Keychain item: this service, account "token".
+    static let keychainService = "doc.md-preview.github"
+    private static let keychainAccount = "token"
 
     enum Status: Equatable {
         case idle
@@ -50,6 +55,9 @@ final class TeamSpace {
     }
 
     var isSignedIn: Bool { token != nil }
+
+    /// Signed in with a repository connected.
+    var canSync: Bool { engine != nil }
 
     /// The synced folder; nil until a repository is connected.
     var folderURL: URL? {
@@ -83,9 +91,10 @@ final class TeamSpace {
         interval = Interval(rawValue: defaults.integer(forKey: Keys.interval)) ?? .thirtySeconds
     }
 
-    /// Called once at launch.
+    /// Called once, with the other services that wait for the first frame.
     func start() {
-        token = (try? TeamSpaceKeychain.read()).flatMap { String(data: $0, encoding: .utf8) }
+        token = (try? ShareLinkKeychain.read(account: Self.keychainAccount, service: Self.keychainService))
+            .flatMap { String(data: $0, encoding: .utf8) }
         NotificationCenter.default.addObserver(
             self, selector: #selector(appDidBecomeActive(_:)),
             name: NSApplication.didBecomeActiveNotification, object: nil)
@@ -97,6 +106,7 @@ final class TeamSpace {
     func signIn() {
         signInTask?.cancel()
         signInTask = Task {
+            defer { deviceCode = nil }
             do {
                 let code = try await GitHubClient.requestDeviceCode(clientID: Self.clientID, scope: "repo")
                 deviceCode = code
@@ -104,18 +114,15 @@ final class TeamSpace {
                 NSPasteboard.general.setString(code.userCode, forType: .string)
                 NSWorkspace.shared.open(code.verificationURL)
                 let token = try await pollForToken(code)
-                try TeamSpaceKeychain.write(Data(token.utf8))
+                try ShareLinkKeychain.write(Data(token.utf8), account: Self.keychainAccount, service: Self.keychainService)
                 self.token = token
                 let login = try await GitHubClient(token: token).login()
                 self.login = login
                 UserDefaults.standard.set(login, forKey: Keys.login)
-                deviceCode = nil
                 status = .idle
                 makeEngine()
             } catch is CancellationError {
-                deviceCode = nil
             } catch {
-                deviceCode = nil
                 status = .failed(Self.message(for: error))
             }
         }
@@ -129,7 +136,7 @@ final class TeamSpace {
 
     /// Forgets the token. The folder and its files stay.
     func signOut() {
-        TeamSpaceKeychain.delete()
+        ShareLinkKeychain.delete(account: Self.keychainAccount, service: Self.keychainService)
         token = nil
         login = nil
         UserDefaults.standard.removeObject(forKey: Keys.login)
@@ -256,14 +263,14 @@ final class TeamSpace {
     }
 
     private func makeEngine() {
-        loopTask?.cancel()
-        loopTask = nil
-        engine = nil
-        guard let token, let repository, let branch, let folderURL else { return }
-        engine = TeamSpaceSyncEngine(
-            client: GitHubClient(token: token), repo: repository, branch: branch, folder: folderURL,
-            stateFolder: Self.stateRoot.appending(path: repository.replacingOccurrences(of: "/", with: "-")),
-            deviceName: Host.current().localizedName ?? "a Mac")
+        engine = if let token, let repository, let branch, let folderURL {
+            TeamSpaceSyncEngine(
+                client: GitHubClient(token: token), repo: repository, branch: branch, folder: folderURL,
+                stateFolder: Self.stateRoot.appending(path: repository.replacingOccurrences(of: "/", with: "-")),
+                deviceName: SCDynamicStoreCopyComputerName(nil, nil) as String? ?? "a Mac")
+        } else {
+            nil
+        }
         restartLoop()
     }
 
@@ -293,19 +300,18 @@ final class TeamSpace {
         alert.informativeText = NSLocalizedString(
             "Both versions changed the same lines, so they could not be combined. Choose the version to keep. Keep Both saves GitHub’s version as a copy next to yours.",
             comment: "Team Space conflict alert")
-        alert.addButton(withTitle: NSLocalizedString("Keep Mine", comment: "Team Space conflict alert button"))
-        alert.addButton(withTitle: NSLocalizedString("Keep GitHub’s", comment: "Team Space conflict alert button"))
-        alert.addButton(withTitle: NSLocalizedString("Keep Both", comment: "Team Space conflict alert button"))
+        let resolutions = TeamSpaceSyncEngine.Resolution.allCases
+        for resolution in resolutions { alert.addButton(withTitle: resolution.title) }
         alert.addButton(withTitle: NSLocalizedString("Decide Later", comment: "Team Space conflict alert button"))
 
         let handle: (NSApplication.ModalResponse) -> Void = { [weak self] response in
             guard let self else { return }
             isPrompting = false
-            switch response {
-            case .alertFirstButtonReturn: resolve(conflict, with: .keepLocal)
-            case .alertSecondButtonReturn: resolve(conflict, with: .keepRemote)
-            case .alertThirdButtonReturn: resolve(conflict, with: .keepBoth)
-            default: promptForNextConflict()
+            let index = response.rawValue - NSApplication.ModalResponse.alertFirstButtonReturn.rawValue
+            if resolutions.indices.contains(index) {
+                resolve(conflict, with: resolutions[index])
+            } else {
+                promptForNextConflict()
             }
         }
         if let window = NSApp.keyWindow ?? NSApp.mainWindow, window.attachedSheet == nil {
@@ -340,42 +346,5 @@ final class TeamSpace {
         default:
             error.localizedDescription
         }
-    }
-}
-
-/// The GitHub token, one generic-password item.
-nonisolated enum TeamSpaceKeychain {
-
-    static let service = "doc.md-preview.github"
-    private static let account = "token"
-
-    static func read() throws -> Data? {
-        var query = baseQuery
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-        if status == errSecItemNotFound { return nil }
-        guard status == errSecSuccess else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(status)) }
-        return result as? Data
-    }
-
-    static func write(_ data: Data) throws {
-        delete()
-        var item = baseQuery
-        item[kSecValueData as String] = data
-        item[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        let status = SecItemAdd(item as CFDictionary, nil)
-        guard status == errSecSuccess else { throw NSError(domain: NSOSStatusErrorDomain, code: Int(status)) }
-    }
-
-    static func delete() {
-        SecItemDelete(baseQuery as CFDictionary)
-    }
-
-    private static var baseQuery: [String: Any] {
-        [kSecClass as String: kSecClassGenericPassword,
-         kSecAttrService as String: service,
-         kSecAttrAccount as String: account]
     }
 }

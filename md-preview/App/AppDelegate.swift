@@ -528,6 +528,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     }
 
     @IBAction func checkForUpdates(_ sender: Any?) {
+        guard UpdateController.isEnabled else { return }
         startDeferredLaunchServices()
         updaterController.updater.checkForUpdates()
     }
@@ -1498,6 +1499,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         // services timer fires starts the updater first.
         checkForUpdatesMenuItem?.target = self
         checkForUpdatesMenuItem?.action = #selector(checkForUpdates(_:))
+        checkForUpdatesMenuItem?.isHidden = !UpdateController.isEnabled
 
         guard let appMenu = checkForUpdatesMenuItem?.menu,
               let settingsIndex = appMenu.items.firstIndex(where: {

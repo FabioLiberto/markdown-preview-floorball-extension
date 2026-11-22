@@ -28,13 +28,33 @@
 
 ## Installation
 
+### Markdown Preview Floorball (this fork)
+
+This fork is a separate app, **Markdown Preview Floorball**
+(`io.github.fabioliberto.md-preview-floorball`). It installs next to the original Markdown
+Preview without sharing its settings, it has no automatic updates and no crash
+reporting, and it is not notarized.
+
+1. Download the latest `Markdown-Preview-Floorball-<version>.zip` from the
+   [Releases](https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases)
+   page, open it, and drag **Markdown Preview Floorball** to Applications.
+2. Open it. macOS says it cannot verify the developer: click **Done**, then
+   open **System Settings → Privacy & Security**, scroll down, and click
+   **Open Anyway** next to the message about Markdown Preview Floorball.
+   This is needed once per downloaded version.
+3. For a new version, download it again from Releases and replace the app.
+
+To make the zip: `scripts/package-fork.sh` (needs Xcode).
+
+### The original Markdown Preview
+
 Markdown Preview is available in the official [Homebrew cask repository](https://formulae.brew.sh/cask/markdown-preview):
 
 ```sh
 brew install --cask markdown-preview
 ```
 
-Or grab the latest signed and notarized DMG from the [Releases](https://github.com/pluk-inc/markdown-preview/releases) page.
+Or grab the latest signed and notarized DMG from its [Releases](https://github.com/pluk-inc/markdown-preview/releases) page.
 
 ## Screenshots
 

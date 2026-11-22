@@ -560,8 +560,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "doc.md-preview.dev";
-				PRODUCT_NAME = "Markdown Preview";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.fabioliberto.md-preview-floorball.dev";
+				PRODUCT_NAME = "Markdown Preview Floorball";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -599,8 +599,8 @@
 					"@executable_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 15.0;
-				PRODUCT_BUNDLE_IDENTIFIER = "doc.md-preview";
-				PRODUCT_NAME = "Markdown Preview";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.fabioliberto.md-preview-floorball";
+				PRODUCT_NAME = "Markdown Preview Floorball";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				REGISTER_APP_GROUPS = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -631,7 +631,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "doc.md-preview.dev.quick-look";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.fabioliberto.md-preview-floorball.dev.quick-look";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
@@ -662,7 +662,7 @@
 					"@executable_path/../Frameworks",
 					"@executable_path/../../../../Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = "doc.md-preview.quick-look";
+				PRODUCT_BUNDLE_IDENTIFIER = "io.github.fabioliberto.md-preview-floorball.quick-look";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;

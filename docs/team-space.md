@@ -14,7 +14,7 @@ staff can keep one playbook of Markdown files and floorball diagrams.
    lists it at the top, under *Team Space*.
 
 The folder is
-`~/Library/Containers/doc.md-preview/Data/Library/Application Support/Team Space/<name>`.
+`~/Library/Containers/io.github.fabioliberto.md-preview-floorball/Data/Library/Application Support/Team Space/<name>`.
 The app keeps its sync state next to it, in `Team Space State/`. Sign Out
 and Disconnect stop syncing but leave the files where they are.
 

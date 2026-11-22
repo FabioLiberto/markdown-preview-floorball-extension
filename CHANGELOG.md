@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.78] – 2026-11-22 – Rename from the sidebar
+
+Markdown Preview Floorball 0.0.78 focuses on renaming files and folders without leaving the app.
+
+### Added
+
+- **Rename in the Sidebar.** Right-click a file or folder in the sidebar and choose Rename… to change its name in place, with the name selected without its extension, as in Finder ([#9](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/9)).
+
+### Changed
+
+- **Open Documents Follow Their New Name.** A document you rename while it is open keeps its place and saves under the new name, and in your Team Space the rename reaches GitHub in the next sync ([#9](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/9)).
+
 ## [0.0.77] – 2026-11-22 – Delete from the sidebar
 
 Markdown Preview Floorball 0.0.77 focuses on tidying up your files from the sidebar.

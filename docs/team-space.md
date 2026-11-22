@@ -10,8 +10,9 @@ staff can keep one playbook of Markdown files and floorball diagrams.
    the Keychain (service `doc.md-preview.github`).
 2. Enter the repository as `owner/name`, or paste its github.com URL, and
    click **Connect**. Your account needs push access.
-3. **Show in Sidebar** opens the folder. Later, the sidebar's folder menu
-   lists it at the top, under *Team Space*, and a file inside it opens with
+3. **Show in Sidebar** opens the folder. Later, the app opens on it when
+   started without a file, the sidebar's folder menu lists it at the top,
+   under *Team Space*, and a file inside it opens with
    the whole Team Space in the sidebar, as a file in a favorite does.
 
 The folder is

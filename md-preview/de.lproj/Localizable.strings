@@ -655,3 +655,6 @@
 "Open File or Folder…" = "Datei oder Ordner öffnen …";
 "Open Team Space" = "Team Space öffnen";
 "Set Up Team Space…" = "Team Space einrichten …";
+
+/* Project navigator */
+"Move to Trash" = "In den Papierkorb legen";

@@ -15,6 +15,8 @@ enum AutoSaveSetting {
     static let disabledMinutes = 0
     static let minimumMinutes = 1
     static let maximumMinutes = 60
+    /// Used until the user picks a value in Settings, so edits save without ⌘S.
+    static let defaultMinutes = instant
 
     static var currentMinutes: Int {
         currentMinutes(from: .standard)
@@ -22,7 +24,7 @@ enum AutoSaveSetting {
 
     static func currentMinutes(from defaults: UserDefaults) -> Int {
         guard let stored = defaults.object(forKey: defaultsKey) as? NSNumber else {
-            return disabledMinutes
+            return defaultMinutes
         }
         return clampedMinutes(stored.intValue)
     }

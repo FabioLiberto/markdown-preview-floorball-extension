@@ -42,9 +42,10 @@ when the app comes to the front. A round where nothing changed costs one
 request, and GitHub does not count it against the rate limit.
 
 Unsaved edits in an open document are not synced. The file syncs once it
-is saved, by hand or by automatic saving (Settings → General). If a sync
-round changes a file that is open with unsaved edits, automatic saving skips
-that file, and ⌘S shows the usual "changed on disk" choice.
+is saved. Automatic saving is on by default (Instant: 2 seconds after you
+stop typing), so edits reach GitHub within one sync round. If a sync round
+changes a file that is open with unsaved edits, automatic saving skips that
+file, and ⌘S shows the usual "changed on disk" choice.
 
 ## Not synced
 

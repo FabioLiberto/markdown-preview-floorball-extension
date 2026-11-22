@@ -3,9 +3,19 @@ import XCTest
 @testable import MarkdownHelpers
 
 final class AutoSaveSettingTests: XCTestCase {
-    func testMissingValueDisablesAutomaticSaving() throws {
+    func testMissingValueSavesInstantly() throws {
         let defaults = try makeDefaults()
 
+        XCTAssertEqual(
+            AutoSaveSetting.currentMinutes(from: defaults),
+            AutoSaveSetting.instant
+        )
+    }
+
+    func testChoosingNeverStaysOff() throws {
+        let defaults = try makeDefaults()
+
+        AutoSaveSetting.store(minutes: AutoSaveSetting.disabledMinutes, in: defaults)
         XCTAssertEqual(
             AutoSaveSetting.currentMinutes(from: defaults),
             AutoSaveSetting.disabledMinutes

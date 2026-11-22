@@ -77,7 +77,7 @@ The rest of the app is Markdown Preview, so it also has:
 
 - **Read and Edit Mode** — a clean preview with a document outline, and in-place editing with a formatting toolbar, task checkboxes, tables, and a plain-text Markdown source view (<kbd>⇧⌘E</kbd>).
 - **Mermaid diagrams and math** — fenced `mermaid` blocks and LaTeX math render offline.
-- **File navigator** — browse, create, and filter Markdown files in the sidebar, with favorite folders. A file inside a favorite or the Team Space opens with that whole folder in the sidebar. Started without a file, the app opens on the Team Space, or else the folder you had open last; the file chooser appears only when there is neither.
+- **File navigator** — browse, create, and filter Markdown files in the sidebar, with favorite folders. A file inside a favorite or the Team Space opens with that whole folder in the sidebar. Started without a file, the app opens on the Team Space, or else on a start page with New Document, Open File or Folder…, the Team Space, and your recent files and folders.
 - **Search** — find text in a document (<kbd>⌘F</kbd>), or find a document by name (<kbd>⇧⌘O</kbd>).
 - **Export and print** — PDF, PNG, HTML, and EPUB, with font size and scale in the print dialog.
 - **Quick Look** — press Space on a `.md` file in Finder for a preview, diagrams included.

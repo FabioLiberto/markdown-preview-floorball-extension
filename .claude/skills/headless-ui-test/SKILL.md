@@ -16,9 +16,14 @@ or the Quick Look extension.
 ## Rules
 
 - **Always open a document in the same `open` call that launches the app.**
-  With no document, the app calls `NSApp.activate` and shows the file chooser
-  (`scheduleDocumentPrompt` in `AppDelegate.swift`). That steals the user's
-  focus, and the chooser takes the key events you send.
+  With no document, the app calls `NSApp.activate` and shows the start page,
+  or opens the Team Space when one is connected (`scheduleDocumentPrompt` in
+  `AppDelegate.swift`). That steals the user's focus, and the start page
+  takes the key events you send.
+- **Keep test documents outside `~/Documents`, `~/Desktop`, and
+  `~/Downloads`.** A freshly built app has no privacy permission for them, so
+  opening one waits on a permission prompt on the user's screen and no
+  document window appears. Use a file in your scratch folder.
 - **Use `open -g -n -a`, never plain `open -a`.** `-g` keeps the app in the
   background. `-n` starts your own instance.
 - **Work by PID only.** Other sessions run builds with the same bundle id.
@@ -113,14 +118,14 @@ screenshots. Start the app build (step 3) in the background first: steps 1 and
    done
    [ -n "$moved" ] || {
      echo "window not moved after 5 s: stop the check" >&2; kill $PID $VD_PID; exit 1; }
-   [ "$(osascript -e "tell application \"System Events\" to tell (first process whose unix id is $PID) to count (windows whose name is \"Open\")")" -eq 0 ] || {
-     echo "the app showed the file chooser and took focus: stop the check" >&2
+   [ "$(osascript -e "tell application \"System Events\" to tell (first process whose unix id is $PID) to count (windows whose name is \"Open\" or name is \"Markdown Preview Floorball\")")" -eq 0 ] || {
+     echo "the app showed the start page or the file chooser and took focus: stop the check" >&2
      kill $PID $VD_PID; exit 1; }
    ```
 
    The last check is for a launch race in the app: when the system is busy,
    the open-file event can arrive after `applicationDidFinishLaunching`, so the
-   app activates and shows the file chooser even though it got a document.
+   app activates and shows the start page even though it got a document.
    With a load average of 25–45 this happened in about 4 of 9 launches; on an
    idle Mac it did not happen. Tell the user when it happens, because the app
    took their focus, and try again later.

@@ -648,3 +648,10 @@
 "The sign-in code expired. Try again." = "サインインコードの有効期限が切れました。もう一度お試しください。";
 "GitHub: %@" = "GitHub：%@";
 "GitHub could not be reached." = "GitHubに接続できません。";
+
+/* Start page */
+"Training plans, playbooks, and tactics in Markdown." = "練習計画、プレイブック、戦術をMarkdownで。";
+"New Document" = "新規書類";
+"Open File or Folder…" = "ファイルまたはフォルダを開く…";
+"Open Team Space" = "チームスペースを開く";
+"Set Up Team Space…" = "チームスペースを設定…";

@@ -174,7 +174,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         installViewMenuItemIcons()
         hasFinishedLaunching = true
         if !didReceiveOpenURLsDuringLaunch && !launchedAsLoginItem {
-            scheduleDocumentPrompt(requiresNoDocuments: true, offersStartFolder: true)
+            scheduleDocumentPrompt(requiresNoDocuments: true, offersStartPage: true)
         }
         // Nothing below is visible in the first frame. A document opened
         // from Finder arrives before this callback, so by now its window is
@@ -248,13 +248,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     }
 
     func applicationOpenUntitledFile(_ sender: NSApplication) -> Bool {
-        scheduleDocumentPrompt(requiresNoDocuments: true, offersStartFolder: true)
+        scheduleDocumentPrompt(requiresNoDocuments: true, offersStartPage: true)
         return true
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
         if !flag {
-            scheduleDocumentPrompt(requiresNoDocuments: true, offersStartFolder: true)
+            scheduleDocumentPrompt(requiresNoDocuments: true, offersStartPage: true)
             return false
         }
         return true
@@ -852,10 +852,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     }
 
     /// Shows the open panel on the next turn of the run loop, unless a file
-    /// arrives first. With `offersStartFolder` (launch, or a click on the
-    /// Dock icon with no window open), the start folder opens instead when
-    /// there is one, so the app starts on the playbook rather than a panel.
-    private func scheduleDocumentPrompt(requiresNoDocuments: Bool = false, offersStartFolder: Bool = false) {
+    /// arrives first. With `offersStartPage` (launch, or a click on the
+    /// Dock icon with no window open), the Team Space opens instead while
+    /// one is connected, and the start page otherwise.
+    private func scheduleDocumentPrompt(requiresNoDocuments: Bool = false, offersStartPage: Bool = false) {
         guard !isOpenPanelVisible,
               !isDocumentPromptScheduled else { return }
 
@@ -867,21 +867,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
             guard self.documentPromptScheduleGeneration == scheduleGeneration else { return }
             self.isDocumentPromptScheduled = false
             guard !requiresNoDocuments || NSDocumentController.shared.documents.isEmpty else { return }
-            if offersStartFolder, let folder = Self.startFolder {
-                self.openFolder(folder)
+            if offersStartPage {
+                if let teamFolder = TeamSpace.shared.folderURL, teamFolder.isExistingDirectory {
+                    self.openFolder(teamFolder)
+                } else {
+                    StartWindowController.shared.show()
+                }
                 return
             }
             NSApp.activate(ignoringOtherApps: true)
             NSDocumentController.shared.openDocument(nil)
         }
-    }
-
-    /// The Team Space while one is connected, else the folder the sidebar
-    /// showed last; nil when neither exists any more.
-    private static var startFolder: URL? {
-        [TeamSpace.shared.folderURL, RecentFolders.last].lazy
-            .compactMap { $0 }
-            .first(where: \.isExistingDirectory)
     }
 
     private func cancelScheduledDocumentPrompt() {

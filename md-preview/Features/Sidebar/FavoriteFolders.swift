@@ -70,8 +70,8 @@ enum RecentFolders {
     private static let storedLimit = 8
     private static let menuLimit = 5
 
-    /// The folder the navigator showed last.
-    static var last: URL? { storedFolders(forKey: defaultsKey).first }
+    /// The folders the navigator showed, newest first.
+    static var recorded: [URL] { storedFolders(forKey: defaultsKey) }
 
     static func record(_ folder: URL) {
         let folder = folder.standardizedFileURL

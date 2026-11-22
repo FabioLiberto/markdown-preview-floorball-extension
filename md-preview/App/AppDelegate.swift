@@ -185,8 +185,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         }
     }
 
-    /// Sparkle and Sentry both do XPC and file work at start; neither is
-    /// needed for the first frame. Idempotent, so an early caller (Check for
+    /// Sparkle, Sentry, and the Team Space do XPC, Keychain, and file work
+    /// at start; none is needed for the first frame. Idempotent, so an early caller (Check for
     /// Updates…) can run it ahead of the launch timer.
     func startDeferredLaunchServices() {
         guard !didStartDeferredLaunchServices else { return }
@@ -194,6 +194,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         LaunchSignposts.interval("deferredServices") {
             updaterController.startUpdater()
             CrashReporter.start()
+            TeamSpace.shared.start()
             // Capture launch settings before another instance can change
             // them while we're inactive, even if this user never opens the
             // Settings window. Creating the model reads every setting and
@@ -527,6 +528,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
     }
 
     @IBAction func checkForUpdates(_ sender: Any?) {
+        guard UpdateController.isEnabled else { return }
         startDeferredLaunchServices()
         updaterController.updater.checkForUpdates()
     }
@@ -809,7 +811,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         case #selector(checkForUpdates(_:)):
             // Before the updater starts, the click starts it; afterwards
             // Sparkle decides (a check may already be running).
-            return !didStartDeferredLaunchServices || updaterController.updater.canCheckForUpdates
+            return UpdateController.isEnabled
+                && (!didStartDeferredLaunchServices || updaterController.updater.canCheckForUpdates)
         case #selector(toggleSidebarFromMenu(_:)),
              #selector(hideSidebarFromMenu(_:)),
              #selector(selectOutlineMode(_:)),
@@ -1497,6 +1500,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         // services timer fires starts the updater first.
         checkForUpdatesMenuItem?.target = self
         checkForUpdatesMenuItem?.action = #selector(checkForUpdates(_:))
+        checkForUpdatesMenuItem?.isHidden = !UpdateController.isEnabled
 
         guard let appMenu = checkForUpdatesMenuItem?.menu,
               let settingsIndex = appMenu.items.firstIndex(where: {
@@ -1653,6 +1657,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         menu.addItem(item("Numbered List", command: "orderedList", key: "9", modifiers: [.shift, .command]))
         menu.addItem(item("Checklist", command: "taskList", key: "l", modifiers: [.shift, .command]))
         menu.addItem(item("Block Quote", command: "quote", key: "'"))
+        menu.addItem(.separator())
+        let floorball = item("Insert Floorball Diagram", command: "floorball")
+        floorball.image = NSImage(systemSymbolName: "sportscourt", accessibilityDescription: nil)
+        menu.addItem(floorball)
 
         let rootItem = NSMenuItem(title: formatTitle, action: nil, keyEquivalent: "")
         rootItem.submenu = menu

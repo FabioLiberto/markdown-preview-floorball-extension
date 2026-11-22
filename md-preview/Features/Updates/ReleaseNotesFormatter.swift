@@ -17,6 +17,9 @@ import Foundation
 
 nonisolated enum ReleaseNotesFormatter {
 
+    /// This fork's GitHub repository, for every release and project link.
+    static let repository = URL(string: "https://github.com/FabioLiberto/markdown-preview-floorball-extension")!
+
     struct Release: Equatable, Sendable {
         let version: String
         /// The GitHub release name: a release title when the CHANGELOG.md
@@ -214,7 +217,7 @@ nonisolated enum ReleaseNotesFormatter {
     private static func linkPills(_ links: [String], version: String) -> String {
         var pills = Array(links.prefix(visibleLinkCount))
         if links.count > visibleLinkCount {
-            let release = "https://github.com/pluk-inc/markdown-preview/releases/tag/v\(version)"
+            let release = repository.appending(path: "releases/tag/v\(version)").absoluteString
             pills.append("[+\(links.count - visibleLinkCount)](\(release))")
         }
         return #"<span class="mdp-rn-links">\#(pills.joined(separator: " "))</span>"#

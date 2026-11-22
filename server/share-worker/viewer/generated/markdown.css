@@ -1122,6 +1122,77 @@ html.md-preview-print-fidelity .md-table-wrap { padding-top: 0; }
     .md-table-actions { display: none !important; }
     .md-table-wrap { padding-top: 0; }
 }
+.floorball-figure, .cm-md-floorball-preview, .fb-canvas {
+    --fb-surface: light-dark(#f5f8fc, #1c232c);
+    --fb-board: light-dark(#36557f, #a3b8d6);
+    --fb-line: light-dark(#8aa2c4, #5f7799);
+    --fb-goal: light-dark(#d64545, #ef7070);
+    --fb-ink: light-dark(#1d2733, #e6ebf2);
+}
+svg.fb-diagram .fb-surface { fill: var(--fb-surface); stroke: var(--fb-board); }
+svg.fb-diagram .fb-boards { stroke: var(--fb-board); }
+svg.fb-diagram .fb-line, svg.fb-diagram .fb-mark { stroke: var(--fb-line); }
+svg.fb-diagram .fb-spot { fill: var(--fb-line); }
+svg.fb-diagram .fb-crease { fill: color-mix(in srgb, var(--fb-line) 18%, transparent); stroke: var(--fb-line); }
+svg.fb-diagram .fb-goal, svg.fb-diagram .fb-goal-line { stroke: var(--fb-goal); }
+svg.fb-diagram .fb-ink-stroke { stroke: var(--fb-ink); }
+svg.fb-diagram .fb-ink-fill { fill: var(--fb-ink); }
+svg.fb-diagram .fb-surface-stroke { stroke: var(--fb-surface); }
+svg.fb-diagram .fb-player-outline { fill: var(--fb-surface); }
+svg.fb-diagram .fb-text { fill: var(--fb-ink); stroke: var(--fb-surface); }
+svg.fb-diagram .fb-text-custom { stroke: var(--fb-surface); }
+svg.fb-diagram text { font-family: var(--mdp-doc-font, -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif); }
+.floorball-figure {
+    position: relative;
+    margin: 24.0px 0 0;
+    padding: 0;
+    break-inside: avoid;
+}
+.floorball-stage svg {
+    display: block;
+    width: 100%;
+    height: auto;
+}
+.floorball-figure[data-fb-layout="half"] .floorball-stage {
+    max-width: 520px;
+    margin: 0 auto;
+}
+.floorball-edit {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 3px 10px;
+    border: 0.5px solid color-mix(in srgb, var(--text) 18%, transparent);
+    border-radius: 999px;
+    background: color-mix(in srgb, Canvas 85%, transparent);
+    -webkit-backdrop-filter: blur(8px);
+    backdrop-filter: blur(8px);
+    color: var(--text);
+    font: 500 12px/1.4 -apple-system, BlinkMacSystemFont, sans-serif;
+    opacity: 0;
+    transition: opacity 0.15s;
+}
+.floorball-figure:hover .floorball-edit, .floorball-edit:focus-visible { opacity: 1; }
+.floorball-error {
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: var(--code-bg);
+    border: 1px solid color-mix(in srgb, #d70015 35%, transparent);
+}
+.floorball-message { color: light-dark(#b3261e, #ff6961); font-weight: 500; }
+.floorball-source {
+    margin-top: 8px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 0.85em;
+    color: var(--secondary);
+}
+html:not([data-mdp-host]) .floorball-edit,
+html.md-preview-print-fidelity .floorball-edit { display: none; }
+@media print {
+    .floorball-edit { display: none !important; }
+}
 /* The app's scroll override; printing uses viewer.css's print layout. */
 @media screen {
 html { overflow-x: hidden !important; overflow-y: auto !important; overscroll-behavior-x: none; }

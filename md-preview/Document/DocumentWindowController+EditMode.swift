@@ -54,6 +54,17 @@ extension DocumentWindowController {
         mainSplit?.editorViewController?.exec(command)
     }
 
+    /// Read mode's Edit button on a floorball diagram: enter edit mode and
+    /// open the diagram whose fence starts on `line` in the diagram editor.
+    func editFloorballDiagram(onLine line: Int) {
+        guard canToggleEditMode else {
+            NSSound.beep()
+            return
+        }
+        if !isEditing { enterEditMode() }
+        mainSplit?.editorViewController?.openFloorballDiagram(onLine: line)
+    }
+
     var hasPendingEditorChanges: Bool {
         hasUnsavedEditorChanges || isEditorCommitInFlight
     }

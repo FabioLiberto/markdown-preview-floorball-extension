@@ -14,6 +14,10 @@ import AppKit
 import Sparkle
 
 final class UpdateController {
+    /// False without an `SUFeedURL` in Info.plist: this fork has no update
+    /// feed, and new versions are downloaded from its GitHub releases.
+    static let isEnabled = Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") != nil
+
     let model = UpdateModel()
     let updater: SPUUpdater
     private let driver: UpdateDriver
@@ -30,6 +34,7 @@ final class UpdateController {
     }
 
     func startUpdater() {
+        guard Self.isEnabled else { return }
         #if DEBUG
         // `-MarkdownPreview.updatePillDemo available` (or checking, flow,
         // upToDate, failed) plays the capsule without a release and keeps

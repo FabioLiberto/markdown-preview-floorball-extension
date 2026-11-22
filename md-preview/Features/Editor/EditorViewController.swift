@@ -35,6 +35,11 @@ final class EditorViewController: NSViewController, WKNavigationDelegate {
     private let bridge = EditorBridge()
     private let assetScheme = MarkdownAssetScheme()
     private var hasLoadedEditorPage = false
+    /// The loaded page has created its editor for the current document.
+    private var isDocumentReady = false
+    /// A floorball diagram to open once the document is ready, by the line
+    /// of its fence.
+    private var pendingFloorballLine: Int?
     private var pageSupportsMermaid = false
     private var currentAssetBaseURL: URL?
     private var findCompletion: ((FindResult) -> Void)?
@@ -76,6 +81,7 @@ final class EditorViewController: NSViewController, WKNavigationDelegate {
 
     func load(markdown: String, assetBaseURL: URL? = nil) {
         hasChanges = false
+        isDocumentReady = false
         currentAssetBaseURL = assetBaseURL?.standardizedFileURL
         assetScheme.setBaseURL(currentAssetBaseURL)
         let needsMermaid = Self.containsMermaidFence(in: markdown)
@@ -433,6 +439,19 @@ final class EditorViewController: NSViewController, WKNavigationDelegate {
 
     /// Replaces the source after an image rename without rebuilding the page,
     /// preserving the editor's selection and scroll position.
+    /// Opens the graphical editor on the floorball fence starting on `line`,
+    /// now or as soon as the document has loaded.
+    func openFloorballDiagram(onLine line: Int) {
+        pendingFloorballLine = line
+        if isDocumentReady { openPendingFloorballDiagram() }
+    }
+
+    private func openPendingFloorballDiagram() {
+        guard let line = pendingFloorballLine else { return }
+        pendingFloorballLine = nil
+        webView.evaluateJavaScript("window.__mdEditor && window.__mdEditor.openFloorball(\(line))") { _, _ in }
+    }
+
     func replaceMarkdown(_ markdown: String) {
         let script = "window.__mdEditor && window.__mdEditor.replaceMarkdown(\(EditorHTML.jsStringLiteral(markdown)))"
         webView.evaluateJavaScript(script) { _, _ in }
@@ -456,7 +475,9 @@ final class EditorViewController: NSViewController, WKNavigationDelegate {
                 updateObscuredContentInsets()
                 // The setting can change while the page loads.
                 applySourceMode()
+                isDocumentReady = true
                 editorDidBecomeReady?()
+                openPendingFloorballDiagram()
             case "cancel":
                 cancelRequested?()
             case let error where error.hasPrefix("error:"):

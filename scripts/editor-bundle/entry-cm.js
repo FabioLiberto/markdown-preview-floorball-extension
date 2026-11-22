@@ -10,7 +10,7 @@ import {
 } from "@codemirror/view"
 import { Annotation, Compartment, EditorState, EditorSelection, MapMode, Prec, StateEffect, StateField, Transaction } from "@codemirror/state"
 import {
-  defaultKeymap, history, historyKeymap, indentLess, insertTab,
+  defaultKeymap, history, historyKeymap, indentLess, insertTab, isolateHistory, redo, undo,
 } from "@codemirror/commands"
 import { closeBrackets, closeBracketsKeymap } from "@codemirror/autocomplete"
 import { markdown, markdownLanguage, markdownKeymap, insertNewlineContinueMarkupCommand } from "@codemirror/lang-markdown"
@@ -35,6 +35,9 @@ import { c, cpp, java, kotlin, objectiveC, csharp } from "@codemirror/legacy-mod
 import { sql } from "@codemirror/legacy-modes/mode/sql"
 import { toml } from "@codemirror/legacy-modes/mode/toml"
 import { mathSyntax } from "./math.js"
+import { FloorballEditor } from "./floorball/editor.js"
+import { createDiagram, serialize as serializeFloorball, tryParse as parseFloorball } from "./floorball/model.js"
+import { renderSVG as renderFloorballSVG } from "./floorball/render.js"
 import { stexMath } from "@codemirror/legacy-modes/mode/stex"
 import { hclLanguage } from "codemirror-lang-hcl"
 
@@ -448,6 +451,218 @@ class MermaidWidget extends WidgetType {
   }
 
   ignoreEvent() { return true }
+}
+
+// A rendered ```floorball fence. Clicking it opens the graphical editor; a
+// fence that does not parse shows why, and clicking it reveals the source.
+class FloorballWidget extends MermaidWidget {
+  figure(view) {
+    const messages = floorballMessages()
+    const figure = document.createElement("figure")
+    figure.className = "cm-md-floorball-preview"
+    const parsed = parseFloorball(this.source)
+    const fenceFrom = () => {
+      let to = null
+      view.state.field(mermaidPreviews).between(view.posAtDOM(figure), view.posAtDOM(figure), (_start, end) => { to = end; return false })
+      return to == null ? null : fencedCodeNode(view.state, to, -1)
+    }
+    if (!parsed.ok) {
+      figure.classList.add("cm-md-floorball-error")
+      figure.setAttribute("role", "group")
+      const message = document.createElement("div")
+      message.className = "cm-md-floorball-message"
+      message.textContent = floorballErrorMessage(parsed.code, messages)
+      const source = document.createElement("pre")
+      source.textContent = this.source
+      figure.append(message, source)
+      figure.title = messages.editSource
+      figure.addEventListener("mousedown", (event) => {
+        event.preventDefault()
+        view.focus()
+        const node = fenceFrom()
+        if (!node) return
+        const { sourceTo, closed } = fencedCodeDetails(view.state, node)
+        view.dispatch({ selection: { anchor: closed ? Math.max(sourceTo - 1, node.from) : sourceTo }, userEvent: "select.pointer" })
+      })
+      return figure
+    }
+    figure.setAttribute("role", "group")
+    figure.setAttribute("aria-label", messages.diagram)
+    figure.dataset.fbLayout = parsed.diagram.rink.layout
+    figure.innerHTML = renderFloorballSVG(parsed.diagram, { label: messages.diagram })
+    const edit = document.createElement("button")
+    edit.type = "button"
+    edit.className = "cm-md-floorball-edit"
+    edit.textContent = messages.edit
+    edit.tabIndex = -1
+    figure.append(edit)
+    figure.title = messages.editHint
+    figure.addEventListener("mousedown", (event) => {
+      if (event.button !== 0) return
+      event.preventDefault()
+      event.stopPropagation()
+      const node = fenceFrom()
+      if (node) openFloorballEditor(view, node.from)
+    })
+    return figure
+  }
+}
+
+const FLOORBALL_ENGLISH = {
+  diagram: "Floorball diagram",
+  edit: "Edit Diagram",
+  editHint: "Click to edit the diagram.",
+  editSource: "Click to edit the source.",
+  invalidJSON: "This floorball diagram is not valid JSON.",
+  invalid: "This floorball diagram is not valid.",
+  unsupportedVersion: "This floorball diagram was made with a newer version of Markdown Preview.",
+}
+
+// Localized by the host (MarkdownHTML.floorballMessagesJS); English stands
+// in when the host has none.
+function floorballMessages() {
+  return { ...FLOORBALL_ENGLISH, ...(window.__mdFloorballMessages || {}) }
+}
+
+function floorballErrorMessage(code, messages) {
+  if (code === "invalid-json") return messages.invalidJSON
+  if (code === "unsupported-version") return messages.unsupportedVersion
+  return messages.invalid
+}
+
+// The open graphical editor of each view, and the fence it edits. Its
+// position is mapped through every change, so edits elsewhere cannot lose it.
+const floorballSessions = new WeakMap()
+
+function floorballFenceAt(state, from) {
+  ensureSyntaxTree(state, Math.min(state.doc.length, from + 1), 200)
+  const node = fencedCodeNode(state, from, 1)
+  return node && node.from === from && fenceInfoLanguage(state, node) === "floorball" ? node : null
+}
+
+// Writes `source` as the fence's content. Inside a quote or list every line
+// takes the container's prefix, copied from the closing marker's line (or,
+// for an unclosed fence, the opening line with list markers blanked).
+function floorballChanges(state, node, source) {
+  const { sourceFrom, sourceTo, closed } = fencedCodeDetails(state, node)
+  const openingLine = state.doc.lineAt(node.from)
+  const blankedMarker = ({ prefix, indent }) => indent + " ".repeat(prefix.length - indent.length)
+  const prefix = closed ? state.sliceDoc(state.doc.lineAt(node.lastChild.from).from, node.lastChild.from)
+    : blankedMarker(listPrefix(state.sliceDoc(openingLine.from, node.from)))
+  const body = source.split("\n").map((line) => prefix + line).join("\n")
+  if (closed) return { from: sourceFrom, to: sourceTo, insert: body + "\n" }
+  const marker = state.sliceDoc(node.firstChild.from, node.firstChild.to)
+  return { from: openingLine.to, to: node.to, insert: "\n" + body + "\n" + prefix + marker }
+}
+
+function openFloorballEditor(view, fenceFrom, options = {}) {
+  floorballSessions.get(view)?.editor.close()
+  const node = floorballFenceAt(view.state, fenceFrom)
+  if (!node) return false
+  const initial = fencedCodeDetails(view.state, node).source
+  // Only a diagram this version understands opens; anything else stays
+  // with its source, untouched.
+  if (!parseFloorball(initial).ok) return false
+  let from = fenceFrom
+  // A caret inside the fence, or on its closing marker, would show its
+  // source instead of the diagram: keep it on the line after (or, at the
+  // end of the document, before) the fence.
+  const outside = () => {
+    const { doc } = view.state
+    const fence = floorballFenceAt(view.state, from)
+    if (!fence) return Math.min(from, doc.length)
+    const closing = doc.lineAt(fence.to)
+    return closing.to < doc.length ? closing.to + 1 : Math.max(0, doc.lineAt(fence.from).from - 1)
+  }
+  view.dispatch({ selection: { anchor: outside() }, userEvent: "select", effects: EditorView.scrollIntoView(fenceFrom, { y: "nearest" }) })
+  const session = {
+    map: (changes) => { from = changes.mapPos(from, 1) },
+    editor: null,
+  }
+  const host = {
+    read: () => {
+      const fence = floorballFenceAt(view.state, from)
+      return fence ? fencedCodeDetails(view.state, fence).source : null
+    },
+    write: (source) => {
+      const fence = floorballFenceAt(view.state, from)
+      if (!fence) return
+      view.dispatch({
+        changes: floorballChanges(view.state, fence, source),
+        annotations: isolateHistory.of("full"),
+        userEvent: "input.floorball",
+      })
+    },
+    // The fence and its lines; a blank line after it goes too when one
+    // before it already separates the blocks. A list marker on the
+    // opening line stays with its item.
+    remove: () => {
+      const fence = floorballFenceAt(view.state, from)
+      if (!fence) return
+      const { doc } = view.state
+      const opening = doc.lineAt(fence.from)
+      const closing = doc.lineAt(fence.to)
+      if (listPrefix(view.state.sliceDoc(opening.from, fence.from)).style !== "none") {
+        view.dispatch({ changes: { from: fence.from, to: closing.to }, annotations: isolateHistory.of("full"), userEvent: "delete.floorball" })
+        return
+      }
+      let to = Math.min(doc.length, closing.to + 1)
+      const next = to < doc.length ? doc.lineAt(to) : null
+      const blankBefore = opening.number === 1 || !doc.line(opening.number - 1).text.trim()
+      if (next && !next.text.trim() && blankBefore) to = Math.min(doc.length, next.to + 1)
+      // At the end of the document, take the line break before instead.
+      const start = to === closing.to && opening.from > 0 ? opening.from - 1 : opening.from
+      view.dispatch({ changes: { from: start, to }, annotations: isolateHistory.of("full"), userEvent: "delete.floorball" })
+    },
+    undo: () => undo(view),
+    redo: () => redo(view),
+    close: () => {
+      if (floorballSessions.get(view) === session) floorballSessions.delete(view)
+      view.focus()
+      const anchor = outside()
+      view.dispatch({ selection: { anchor }, userEvent: "select", effects: EditorView.scrollIntoView(anchor, { y: "nearest" }) })
+    },
+  }
+  floorballSessions.set(view, session)
+  session.editor = new FloorballEditor(host, { messages: window.__mdFloorballMessages, initialTool: options.initialTool })
+  return true
+}
+
+// Keeps an open sheet on its fence and in step with undo and redo.
+const floorballSync = EditorView.updateListener.of((update) => {
+  const session = floorballSessions.get(update.view)
+  if (!session || !update.docChanged) return
+  session.map(update.changes)
+  session.editor.documentChanged()
+})
+
+// Inserts an empty full-rink diagram after the block holding the selection
+// (in place of an empty line), then opens it in the graphical editor.
+function insertFloorball(view) {
+  const { state } = view
+  const selection = state.selection.main
+  const fence = enclosingNode(state, selection.to, ["FencedCode"])
+  const line = state.doc.lineAt(selection.to)
+  const block = "```floorball\n" + serializeFloorball(createDiagram("full")) + "\n```"
+  let from
+  let to
+  let insert
+  if (!fence && !line.text.trim()) {
+    from = line.from
+    to = line.to
+    insert = block
+  } else {
+    from = to = fence ? fence.to : line.to
+    const close = fence && fence.lastChild?.name !== "CodeMark"
+      ? "\n" + state.sliceDoc(fence.firstChild.from, fence.firstChild.to) : ""
+    insert = close + "\n\n" + block
+  }
+  const next = to < state.doc.length ? state.doc.lineAt(to + 1) : null
+  if (!next || next.text.trim()) insert += "\n"
+  if (next && next.text.trim()) insert += "\n"
+  const fenceFrom = from + insert.indexOf("```floorball")
+  view.dispatch({ changes: { from, to, insert }, selection: { anchor: fenceFrom }, userEvent: "input" })
+  return openFloorballEditor(view, fenceFrom, { initialTool: "attacker" })
 }
 
 // Language input widget for every fenced block, including blocks without an
@@ -1839,7 +2054,8 @@ function fenceInfoLanguage(state, node) {
   const info = node.node.getChild("CodeInfo")
   return info ? state.sliceDoc(info.from, info.to).trim().split(/\s+/, 1)[0].toLowerCase() : ""
 }
-const isMermaidFence = (state, node) => fenceInfoLanguage(state, node) === "mermaid"
+const DIAGRAM_LANGUAGES = new Set(["mermaid", "floorball"])
+const isDiagramFence = (state, node) => DIAGRAM_LANGUAGES.has(fenceInfoLanguage(state, node))
 
 function fencedCodeNode(state, pos, side) {
   // Stay in the outer Markdown tree—the innermost mounted language tree does
@@ -2141,7 +2357,7 @@ function buildMermaidPreviews(state) {
         }).range(node.from, node.to))
         return false
       }
-      if (details.language === "mermaid" && !isActive && !currentFindTouches(state, node.from, node.to)) {
+      if (DIAGRAM_LANGUAGES.has(details.explicitLanguage) && !isActive && !currentFindTouches(state, node.from, node.to)) {
         // Replace whole lines: inside a quote or list the fence starts after
         // the marker or indent, and what the replace left of that line would
         // still draw as an empty code card above the diagram. A list marker on
@@ -2162,7 +2378,8 @@ function buildMermaidPreviews(state) {
         }
         ranges.push(Decoration.replace({
           block: true,
-          widget: new MermaidWidget(details.source, nest.quoteDepth || nest.listDepth ? nest : null),
+          widget: new (details.explicitLanguage === "floorball" ? FloorballWidget : MermaidWidget)(
+            details.source, nest.quoteDepth || nest.listDepth ? nest : null),
         }).range(keepsMarker ? node.from : opening.from, node.to))
         return false
       }
@@ -2193,11 +2410,11 @@ const mermaidPreviews = StateField.define({
         if (fenceSyntaxChanged) return
         const removed = tr.startState.doc.sliceString(fromA, toA)
         const changedSource = removed + inserted.toString()
-        fenceSyntaxChanged = /[`~]|mermaid|math/i.test(changedSource)
+        fenceSyntaxChanged = /[`~]|mermaid|floorball|math/i.test(changedSource)
       })
     }
 
-    if (activeChanged || fenceSyntaxChanged || tr.effects.some((effect) => effect.is(setFind))
+    if (activeChanged || fenceSyntaxChanged || tr.isUserEvent("input.floorball") || tr.effects.some((effect) => effect.is(setFind))
         || (tr.docChanged && tr.state.field(documentFind).query)) return buildMermaidPreviews(tr.state)
     if (tr.docChanged) return value.map(tr.changes)
     return value
@@ -2366,8 +2583,8 @@ function buildDecorations(view, detectedCodeCache) {
       case "Table": return METRICS.table
       case "HorizontalRule": return METRICS.hr
       case "FencedCode":
-        // Mermaid fences render as .mermaid-figure (same margin as tables).
-        return { mermaid: METRICS.table, math: METRICS.math }[fenceInfoLanguage(state, node)]
+        // Mermaid and floorball fences render as figures (same margin as tables).
+        return { mermaid: METRICS.table, floorball: METRICS.table, math: METRICS.math }[fenceInfoLanguage(state, node)]
           ?? METRICS.paragraph
       default: return METRICS.paragraph
     }
@@ -2560,7 +2777,7 @@ function buildDecorations(view, detectedCodeCache) {
         // Container paragraphs and diagrams use their own semantic margin.
         // Their blank source lines are not top-level authored spacers in the
         // preview, where a diagram keeps its larger figure margin.
-        if ((name === "Paragraph" || (name === "FencedCode" && isMermaidFence(state, node)))
+        if ((name === "Paragraph" || (name === "FencedCode" && isDiagramFence(state, node)))
             && /^(Blockquote|ListItem)$/.test(node.node.parent?.name || "")) {
           const first = state.doc.lineAt(node.from)
           if (first.number > state.doc.lineAt(node.node.parent.from).number) {
@@ -3671,6 +3888,7 @@ window.MDEditor = {
           activeCodeBlock,
           wrappedCodeBlocks,
           pointerPreview,
+          floorballSync,
           // Markdown punctuation also carries processingInstruction tags.
           // Keep code colors inside embedded languages, not Markdown markers.
           syntaxHighlighting({
@@ -3780,6 +3998,7 @@ window.MDEditor = {
       orderedList,
       taskList: toggleBlockPrefix("- [ ] ", /^\s*[-*+]\s+\[[ xX]\]\s/),
       link: insertLink,
+      floorball: insertFloorball,
     }
     if (callbacks?.onCopyCode) codeCopyHandlers.set(view, callbacks.onCopyCode)
     if (callbacks?.onFormattingChange) tableFormattingCallbacks.set(view, callbacks.onFormattingChange)
@@ -4031,6 +4250,26 @@ window.MDEditor = {
         view.focus()
         return true
       },
+      // Opens the graphical editor on the floorball fence whose opening
+      // marker is on (1-based) `line`, as read mode reports it.
+      openFloorball: (line) => {
+        const number = Math.floor(Number(line))
+        if (!(number >= 1 && number <= view.state.doc.lines)) return false
+        const { from, to } = view.state.doc.line(number)
+        const tree = ensureSyntaxTree(view.state, to, 200) || syntaxTree(view.state)
+        let fenceFrom = null
+        tree.iterate({ from, to, enter(node) {
+          if (fenceFrom !== null) return false
+          if (node.name === "FencedCode" && node.from >= from && fenceInfoLanguage(view.state, node) === "floorball") fenceFrom = node.from
+        } })
+        return fenceFrom !== null && openFloorballEditor(view, fenceFrom)
+      },
+      closeFloorball: () => {
+        const session = floorballSessions.get(view)
+        session?.editor.close()
+        return !!session
+      },
+      isFloorballOpen: () => floorballSessions.has(view),
       performTableContextAction: (token, action) => {
         if (!pendingTableContextAction || pendingTableContextAction.token !== token) return false
         const pending = pendingTableContextAction
@@ -4039,6 +4278,7 @@ window.MDEditor = {
         return true
       },
       destroy: () => {
+        floorballSessions.get(view)?.editor.close()
         view.destroy()
       },
     }

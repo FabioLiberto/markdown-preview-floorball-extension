@@ -28,13 +28,33 @@
 
 ## Installation
 
+### Markdown Preview Floorball (this fork)
+
+This fork is a separate app, **Markdown Preview Floorball**
+(`io.github.fabioliberto.md-preview-floorball`). It installs next to the original Markdown
+Preview without sharing its settings, it has no automatic updates and no crash
+reporting, and it is not notarized.
+
+1. Download the latest `Markdown-Preview-Floorball-<version>.zip` from the
+   [Releases](https://github.com/FabioLiberto/markdown-preview-floorball-extension/releases)
+   page, open it, and drag **Markdown Preview Floorball** to Applications.
+2. Open it. macOS says it cannot verify the developer: click **Done**, then
+   open **System Settings → Privacy & Security**, scroll down, and click
+   **Open Anyway** next to the message about Markdown Preview Floorball.
+   This is needed once per downloaded version.
+3. For a new version, download it again from Releases and replace the app.
+
+To make the zip: `scripts/package-fork.sh` (needs Xcode).
+
+### The original Markdown Preview
+
 Markdown Preview is available in the official [Homebrew cask repository](https://formulae.brew.sh/cask/markdown-preview):
 
 ```sh
 brew install --cask markdown-preview
 ```
 
-Or grab the latest signed and notarized DMG from the [Releases](https://github.com/pluk-inc/markdown-preview/releases) page.
+Or grab the latest signed and notarized DMG from its [Releases](https://github.com/pluk-inc/markdown-preview/releases) page.
 
 ## Screenshots
 
@@ -70,7 +90,7 @@ Or grab the latest signed and notarized DMG from the [Releases](https://github.c
 
 **App language:** Choose **Settings → General → Language** to use a bundled translation independently of your system language. The app offers to restart right away so the choice applies to settings, menus, and document controls; choose **Later** to keep working, and it applies the next time you open the app. **System Default** removes the app override and follows macOS again. This preference persists across launches and affects only the app; Quick Look previews continue to use their system-selected language. Available languages are discovered from the app’s bundled translations.
 
-Settings uses toolbar tabs. **General** holds the language, how files open, Always on Top, automatic saving, and the app the Open button uses. **Reading** contains text size, content width, text alignment, Markdown line breaks, and outline highlighting. **Appearance** contains the light/dark choice, themes, and their font, spacing, and color customization, with a live sample; resetting a theme leaves global Reading preferences unchanged. **Advanced** holds the command line tools installer and the app link approvals.
+Settings uses toolbar tabs. **General** holds the language, how files open, Always on Top, automatic saving (Instant by default: an edited document saves 2 seconds after you stop typing; choose Never to save only with ⌘S), and the app the Open button uses. **Reading** contains text size, content width, text alignment, Markdown line breaks, and outline highlighting. **Appearance** contains the light/dark choice, themes, and their font, spacing, and color customization, with a live sample; resetting a theme leaves global Reading preferences unchanged. **Advanced** holds the command line tools installer and the app link approvals.
 
 **Text alignment:** Choose **Settings → Reading → Text alignment** for Automatic, Left, Center, Right, or Justified prose. Automatic preserves the document’s existing alignment, including right-to-left text. This global preference persists across launches and theme changes, updates open reading views immediately, and applies to Quick Look when reopened. Code, tables, and explicit HTML alignment remain unchanged. Justification leaves the final paragraph line naturally aligned; enable Strict line breaks to join ordinary source wraps into flowing paragraphs.
 
@@ -81,6 +101,7 @@ Single source newlines remain visible by default. Enable **Settings → Reading 
 - **App links** — Read Mode and Quick Look support custom URL schemes. Before opening an unapproved custom link with a registered app, a compact dialog names the app and offers Cancel, Allow, and Always Allow, with Cancel as the default. For an unapproved custom link with no registered app, an alert reports that no application can open the link. Use Copy Link in the context menu to inspect the destination. “Always Allow” saves approval for that URL scheme across documents, app restarts, and Quick Look. Reset approvals in Settings → Advanced → App links. HTTP, HTTPS, mailto, and the app’s own `md-preview:` links open without this prompt, even after resetting approvals. Executable URLs and literal `file://` links remain blocked; embedded resources cannot launch custom app links.
 - **Edit Mode** — edit Markdown in place with a formatting toolbar for headings, emphasis, lists, quotes, code, and links. Table cells show inline formatting until focused, then reveal their Markdown syntax for editing. Task markers become checkboxes once you finish typing the closing bracket; Enter continues a task list, and Enter on an empty task exits it. Toggle it from the toolbar or with <kbd>⌘E</kbd>, then save with <kbd>⌘S</kbd>. To edit the file as plain text, choose **View → Show Markdown Source** (<kbd>⇧⌘E</kbd>) the source button at the end of the formatting toolbar, or **Show Source** in the editor's context menu (**Show Markdown** there switches back): every Markdown marker stays visible, in a fixed-width font with line numbers, light syntax colors, and a highlight on the current line, and wrapped list items and quotations continue under their text. The switch keeps the selection, unsaved changes, and undo history, applies to every open window, and is remembered the next time you open Edit Mode. Files keep their own line endings (LF, CRLF, or CR) when saved. The editor's context menu is short: **Format** has the formatting commands, the inline styles, the code blocks, and Insert Table are one click away, and a nearby iPhone or iPad can add a photo, a scan, or a sketch, which is saved beside the file as a pasted image is (a scan of several pages keeps its first page only). In the Markdown source, the menu has **Find…** and **Navigate** (Reveal in Project Navigator, Show in Finder) instead.
 - **Mermaid diagrams** — fenced `mermaid` code blocks render as diagrams in both the app and Quick Look previews, using a bundled renderer so previews work offline without a CDN request.
+- **Floorball tactics diagrams** — fenced `floorball` code blocks draw a floorball rink (full, half, or blank) with players, goalkeepers, balls, cones, goals, markers, text, and run, pass, shot, dribble, and freehand arrows. The diagram is stored in the Markdown file as versioned JSON, so it needs no image file, survives saving and reopening, and stays editable. In Edit Mode, **Format → Insert Floorball Diagram** (also in the formatting bar's styling menu) adds an empty rink and opens the diagram editor; click any diagram to edit it again, or use **Edit Diagram** on a diagram in Read Mode. The editor has a tool palette, drag to move, path handles to bend arrows, a property bar for team, number, label, style, and color, and keyboard shortcuts (Delete, ⌘Z / ⇧⌘Z, ⌘D, Esc, and a letter per tool). Every change is an ordinary edit to the document, so it marks it unsaved, autosaves, and undoes like typing. Diagrams render in Read Mode, Quick Look, printing, and PDF, PNG, HTML, and EPUB export; one that is not valid JSON, or comes from a newer version, shows an error above its unchanged source. See [docs/floorball.md](docs/floorball.md) for the format and [samples/floorball.md](samples/floorball.md) for an example.
 - **Math equations** — LaTeX inline (`$x_1 + x_2$`), display (`$$\int_0^1 x^2\,dx$$`), and fenced `math` blocks render with bundled KaTeX in reading and edit modes. In edit mode, click a formula to edit its highlighted LaTeX source; move the caret away to render it again. Inline math source uses inline-code styling; spaces immediately inside either `$` delimiter leave the expression literal. Standalone `$$` source uses the code-block card with visible delimiters and no header controls; fenced `math` uses the usual code-block controls with hidden fences. Pressing Enter after a standalone `$$` inserts a matching closing delimiter and places the caret between them; single-line `$$ equation $$` stays on one source line. Unclosed math stays editable as source. Selecting a rendered formula and copying yields the original LaTeX source (via the official `copy-tex` extension).
 - **Document outline** — sidebar TOC that mirrors your headings; click to jump.
 - **Collapsible sidebar** — the outline and file picker hides when the sidebar collapses; the sidebar toggle stays available to reopen it.
@@ -96,6 +117,7 @@ Single source newlines remain visible by default. Enable **Settings → Reading 
 - **EPUB export** — *File → Export…* offers **EPUB Book** alongside PDF, HTML, and PNG, for reading long documents in Apple Books or on an e-reader, where the reader sets the text size and spacing. The book is split into sections at the shallowest heading level that repeats, with a table of contents built from the headings. Images are embedded, Mermaid diagrams become pictures, math is exported as MathML, and `title`, `author`, and `lang` frontmatter name the book. Typeface and page colours come from the reading app, not the preview’s theme.
 - **Customizable toolbar** — drag in the items you actually use (Print, Copy, Zoom, Sidebar, Open With, Inspector, Share, Search, Search for Document) via *View → Customize Toolbar…* Standard AppKit affordance, your layout sticks across launches.
 - **Share = copy the source** — the share toolbar feeds the picker the Markdown text itself, so **Copy** writes the raw source to the clipboard (great for pasting into ChatGPT / Claude), and Mail, Messages, and Notes get the content in the body instead of a file URL. The popover header shows the file name, word count, and size, and **Export** and **Print** sit above the system services.
+- **Team Space (GitHub sync)** — *Settings → Team Space* signs in with GitHub and connects a repository. Its files sync into a Team Space folder, which the sidebar's folder menu lists first. The app checks GitHub every 15 seconds to 5 minutes (you choose), and also when it comes to the front, and pushes local changes as one commit per round. When a file changed both here and on GitHub, edits to different lines are combined. When the same lines changed, the app asks whether to keep your version, GitHub's, or both. Hidden files such as `.github/` are not synced. See [docs/team-space.md](docs/team-space.md).
 - **Share as Link** — *File → Share as Link…* or the Share popover uploads the document and copies a link that anyone can read in a browser, or in the app if they have it. Links last 7 days, carry the document's images, and the document is updated behind the same link when you share it again. *File → Manage Shared Document…* copies the link again or stops sharing. See [Share links](#share-links) for what the server can see.
 - **Quick Look extension** — system-wide `.md` previews from Finder spacebar, Spotlight, and Mail attachments without launching the app.
 - **Command line tools** — install `mdp`, `md-preview`, and `markdown-preview` from the app menu, then open files or folders from any shell with commands like `mdp README.md` or `mdp .`.
@@ -125,7 +147,7 @@ Build and run the `markdown-preview` scheme. Swift Package Manager will resolve 
 
 ### Crash reporting
 
-Release builds submit native crash reports to the `pluk-inc/markdown-preview` Sentry project. The integration does not collect performance traces, session data, breadcrumbs, network requests, user information, document contents, or file paths. Users can turn reporting off in Markdown Preview > Settings > Privacy; on later launches, the Sentry SDK will not initialize at all.
+Markdown Preview Floorball has no Sentry DSN in its `Info.plist`, so it sends no crash reports. The rest of this section describes the original app: its release builds submit native crash reports to the `pluk-inc/markdown-preview` Sentry project. The integration does not collect performance traces, session data, breadcrumbs, network requests, user information, document contents, or file paths. Users can turn reporting off in Markdown Preview > Settings > Privacy; on later launches, the Sentry SDK will not initialize at all.
 
 The committed DSN is a public client key. Release archives upload the app dSYM with `sentry-cli`; authenticate locally with `sentry-cli login` and keep that authentication token outside the repository.
 

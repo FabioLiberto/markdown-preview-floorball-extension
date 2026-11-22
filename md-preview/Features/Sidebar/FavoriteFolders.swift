@@ -19,6 +19,12 @@ enum FavoriteFolders {
 
     static var all: [URL] { storedFolders(forKey: defaultsKey) }
 
+    /// The folders a file inside opens under: the Team Space folder, which
+    /// works like a favorite without being one, then the favorites.
+    static var pinnedRoots: [URL] {
+        (TeamSpace.shared.folderURL.map { [$0.standardizedFileURL] } ?? []) + all
+    }
+
     static func contains(_ folder: URL) -> Bool {
         all.contains(folder.standardizedFileURL)
     }
@@ -41,7 +47,7 @@ enum FavoriteFolders {
     /// larger view.
     static func root(containing fileURL: URL, among favorites: [URL]? = nil) -> URL? {
         let file = fileURL.standardizedFileURL
-        return (favorites ?? all)
+        return (favorites ?? pinnedRoots)
             .filter { file.isDescendantOrSame(of: $0) && $0.isExistingDirectory }
             .min { $0.pathComponents.count < $1.pathComponents.count }
     }

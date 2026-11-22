@@ -115,6 +115,10 @@ final class ContentViewController: NSViewController {
             (self?.view.window?.windowController as? DocumentWindowController)?
                 .toggleTaskCheckbox(onLine: line, checked: checked)
         }
+        webView.floorballEditRequested = { [weak self] line in
+            (self?.view.window?.windowController as? DocumentWindowController)?
+                .editFloorballDiagram(onLine: line)
+        }
         webView.fragmentLinkActivated = { [weak self] fragment in
             self?.scrollToElement(id: fragment)
         }

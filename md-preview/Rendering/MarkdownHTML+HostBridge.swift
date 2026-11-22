@@ -619,7 +619,7 @@ nonisolated extension MarkdownHTML {
 
         // Controls injected into the article. Copying and Inspector counts
         // both leave them out.
-        const MD_CHROME_SELECTOR = '.md-code-header, .md-table-actions, .mermaid-hud';
+        const MD_CHROME_SELECTOR = '.md-code-header, .md-table-actions, .mermaid-hud, .floorball-edit';
         // A decorated table sits in its wrapper, or in the inner scroller
         // that column resize adds.
         const MD_TABLE_PARENT_SELECTOR = '.md-table-wrap, .md-table-scroll';
@@ -629,7 +629,7 @@ nonisolated extension MarkdownHTML {
 
         // Rendered but not text worth pasting: diagrams, footnote back
         // links, and rules. Copy as Plain Text only.
-        const MD_PLAIN_SKIPPED_SELECTOR = '.mermaid-figure, .mermaid, .footnote-backrefs, .footnote-backref, hr, .md-source-list-marker';
+        const MD_PLAIN_SKIPPED_SELECTOR = '.mermaid-figure, .mermaid, .floorball-figure, .footnote-backrefs, .footnote-backref, hr, .md-source-list-marker';
 
         // Text of `range` as the preview shows it. Walks the live article
         // rather than a detached clone so computed styles decide block
@@ -1218,6 +1218,25 @@ nonisolated extension MarkdownHTML {
             post({ kind: 'taskCheckbox', line, checked: box.checked });
         });
         reappliers.push(enableTaskCheckboxes);
+        // A floorball diagram's Edit button, or a double click on the
+        // diagram, asks the host to open it in edit mode by its fence line.
+        // The button shows only where a host can act on it, not in an
+        // exported HTML file.
+        if (hasHostBridge) document.documentElement.setAttribute('data-mdp-host', '');
+        function requestFloorballEdit(event, target) {
+            if (!hasHostBridge || !target) return;
+            const line = Number(target.closest('[data-source-line]')?.dataset.sourceLine);
+            if (!Number.isInteger(line) || line < 1) return;
+            event.preventDefault();
+            post({ kind: 'floorballEdit', line });
+        }
+        document.addEventListener('click', event => {
+            requestFloorballEdit(event, event.target.closest && event.target.closest('[data-fb-edit]'));
+        });
+        document.addEventListener('dblclick', event => {
+            const figure = event.target.closest && event.target.closest('.floorball-figure');
+            requestFloorballEdit(event, figure && figure.querySelector('[data-fb-edit]') ? figure : null);
+        });
         function mdHash(s) {
             let h = 5381;
             for (let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) >>> 0;

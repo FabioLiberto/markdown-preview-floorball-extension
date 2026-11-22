@@ -17,33 +17,37 @@ struct AboutSettingsView: View {
                 HStack(spacing: 12) {
                     Text(versionNumber)
                         .textSelection(.enabled)
-                    Button(L("Check for Updates")) {
-                        appDelegate?.updaterController.updater.checkForUpdates()
+                    if UpdateController.isEnabled {
+                        Button(L("Check for Updates")) {
+                            appDelegate?.checkForUpdates(nil)
+                        }
                     }
                 }
             }
             .settingsGroupGap()
 
-            LabeledContent(columnLabel("Updates")) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Toggle(L("Automatically check for updates"),
-                           isOn: $model.checksForUpdatesAutomatically)
-                    Toggle(L("Automatically download updates"),
-                           isOn: $model.downloadsUpdatesAutomatically)
-                        .disabled(!model.checksForUpdatesAutomatically)
-                    SettingsCaption(L("Downloaded updates install the next time you quit Markdown Preview."))
+            if UpdateController.isEnabled {
+                LabeledContent(columnLabel("Updates")) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Toggle(L("Automatically check for updates"),
+                               isOn: $model.checksForUpdatesAutomatically)
+                        Toggle(L("Automatically download updates"),
+                               isOn: $model.downloadsUpdatesAutomatically)
+                            .disabled(!model.checksForUpdatesAutomatically)
+                        SettingsCaption(L("Downloaded updates install the next time you quit Markdown Preview."))
+                    }
                 }
-            }
-            .settingsGroupGap()
+                .settingsGroupGap()
 
-            LabeledContent(columnLabel("Last checked")) {
-                Text(lastCheckedSummary).foregroundStyle(.secondary)
+                LabeledContent(columnLabel("Last checked")) {
+                    Text(lastCheckedSummary).foregroundStyle(.secondary)
+                }
+                .settingsGroupGap()
             }
-            .settingsGroupGap()
 
             LabeledContent(columnLabel("Links")) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Link(L("GitHub Project"), destination: URL(string: "https://github.com/pluk-inc/markdown-preview")!)
+                    Link(L("GitHub Project"), destination: ReleaseNotesFormatter.repository)
                     Link(L("Discord Community"), destination: URL(string: "https://discord.com/invite/NUtNMK7re2")!)
                     Link(L("Buy Me a Coffee"), destination: BuyMeACoffee.url)
                 }

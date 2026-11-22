@@ -466,7 +466,7 @@ final class ProjectNavigatorView: NSView {
             guard let self else { return }
             self.refreshTree()
             if let row = self.reveal(url) {
-                self.beginRenaming(url, row: row)
+                self.beginRenaming(url, row: row, opensFile: true)
             } else if !isFolder {
                 self.onSelectFile?(url)
             }
@@ -562,11 +562,14 @@ final class ProjectNavigatorView: NSView {
     /// The row whose name is being typed. Folder changes wait until it ends,
     /// because reloading the outline would throw the editing cell away.
     private var renamingURL: URL?
+    /// A new file opens once it is named; a renamed one stays as it was.
+    private var renamingOpensFile = false
     private var folderChangedWhileRenaming = false
 
-    private func beginRenaming(_ url: URL, row: Int) {
+    private func beginRenaming(_ url: URL, row: Int, opensFile: Bool = false) {
         guard let cell = outlineView.view(atColumn: 0, row: row, makeIfNecessary: true) as? SidebarLabelCellView else { return }
         renamingURL = url
+        renamingOpensFile = opensFile
         let label = cell.label
         label.isEditable = true
         label.isSelectable = true
@@ -583,42 +586,55 @@ final class ProjectNavigatorView: NSView {
     private func endRenaming(_ label: NSTextField, commit: Bool) {
         guard let url = renamingURL else { return }
         renamingURL = nil
+        let opensFile = renamingOpensFile
         label.isEditable = false
         label.isSelectable = false
         label.delegate = nil
-        var finalURL = url
-        if commit, let renamed = renamedURL(for: url, typed: label.stringValue) {
-            do {
-                try FileManager.default.moveItem(at: url, to: renamed)
-                finalURL = renamed
-            } catch {
-                showError(error)
-            }
-        }
-        label.stringValue = finalURL.lastPathComponent
+        let renamed = commit ? renamedURL(for: url, typed: label.stringValue) : nil
+        label.stringValue = url.lastPathComponent
         if folderChangedWhileRenaming {
             // Replay the change that waited: it also refreshes the file index.
             folderChangedWhileRenaming = false
             handleFolderChange()
-        } else if finalURL != url {
-            refreshTree()
         }
-        if finalURL.hasDirectoryPath {
-            reveal(finalURL)
+        guard let renamed else {
+            finishRenaming(at: url, opensFile: opensFile)
+            return
+        }
+        // An open document follows its file (or its folder) to the new
+        // name by itself; the file watcher sees the move.
+        withWriteAccess(to: url.deletingLastPathComponent(), {
+            try FileManager.default.moveItem(at: url, to: renamed)
+        }, then: { [weak self] _ in
+            self?.refreshTree()
+            self?.finishRenaming(at: renamed, opensFile: opensFile)
+        })
+    }
+
+    private func finishRenaming(at url: URL, opensFile: Bool) {
+        if opensFile, !url.isExistingDirectory {
+            onSelectFile?(url)
         } else {
-            onSelectFile?(finalURL)
+            reveal(url)
         }
     }
 
+    @objc private func renameItem(_ sender: NSMenuItem) {
+        guard let url = sender.representedObject as? URL, renamingURL == nil,
+              let row = reveal(url) else { return }
+        beginRenaming(url, row: row)
+    }
+
     /// The new location for a typed name, or nil when the name is unchanged
-    /// or cannot be used. A file named without an extension keeps `.md`.
+    /// or cannot be used. A file named without an extension keeps the one it
+    /// had (`.md` for a new file).
     private func renamedURL(for url: URL, typed: String) -> URL? {
         var name = typed.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty, !name.contains("/"), !name.contains(":"),
               name != url.lastPathComponent else { return nil }
-        let isFolder = url.hasDirectoryPath
+        let isFolder = url.hasDirectoryPath || url.isExistingDirectory
         if !isFolder, (name as NSString).pathExtension.isEmpty {
-            name += ".md"
+            name += "." + (url.pathExtension.isEmpty ? "md" : url.pathExtension)
         }
         let target = url.deletingLastPathComponent().appending(path: name, directoryHint: isFolder ? .isDirectory : .notDirectory)
         guard !FileManager.default.fileExists(atPath: target.path) else {
@@ -1073,6 +1089,10 @@ extension ProjectNavigatorView: NSMenuDelegate {
                                   action: #selector(copyPath(_:)),
                                   url: url))
         menu.addItem(.separator())
+        menu.addItem(makeMenuItem(title: NSLocalizedString("Rename…", comment: "Project navigator context menu"),
+                                  symbol: "pencil",
+                                  action: #selector(renameItem(_:)),
+                                  url: url))
         menu.addItem(makeMenuItem(title: NSLocalizedString("Move to Trash", comment: "Project navigator context menu"),
                                   symbol: "trash",
                                   action: #selector(moveToTrash(_:)),

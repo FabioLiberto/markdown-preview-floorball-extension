@@ -61,7 +61,7 @@ A Team Space is a folder that stays in sync with a GitHub repository, so a coach
 
 1. Open **Settings → Team Space** and click **Sign in with GitHub…**. A browser page opens with a code already copied: paste it and allow access.
 2. Enter the repository as `owner/name` (or paste its github.com URL) and click **Connect**. Your account needs push access to it.
-3. Click **Show in Sidebar**. From then on, the sidebar's folder menu lists the Team Space at the top.
+3. Click **Show in Sidebar**. From then on, the app opens on the Team Space when you start it without a file, and the sidebar's folder menu lists it at the top.
 
 The app checks GitHub every 15 seconds to 5 minutes (you choose), and whenever it comes to the front. Your saved changes go up as one commit per round. When someone else changed the same file, edits to different lines are combined; diagrams keep one player or arrow per line, so two coaches moving different players merge cleanly. When the same lines changed, the app asks whether to keep your version, GitHub's, or both. A push never overwrites someone else's commit.
 
@@ -77,7 +77,7 @@ The rest of the app is Markdown Preview, so it also has:
 
 - **Read and Edit Mode** — a clean preview with a document outline, and in-place editing with a formatting toolbar, task checkboxes, tables, and a plain-text Markdown source view (<kbd>⇧⌘E</kbd>).
 - **Mermaid diagrams and math** — fenced `mermaid` blocks and LaTeX math render offline.
-- **File navigator** — browse, create, and filter Markdown files in the sidebar, with favorite folders. A file inside a favorite or the Team Space opens with that whole folder in the sidebar.
+- **File navigator** — browse, create, and filter Markdown files in the sidebar, with favorite folders. A file inside a favorite or the Team Space opens with that whole folder in the sidebar. Started without a file, the app opens on the Team Space, or else the folder you had open last; the file chooser appears only when there is neither.
 - **Search** — find text in a document (<kbd>⌘F</kbd>), or find a document by name (<kbd>⇧⌘O</kbd>).
 - **Export and print** — PDF, PNG, HTML, and EPUB, with font size and scale in the print dialog.
 - **Quick Look** — press Space on a `.md` file in Finder for a preview, diagrams included.

@@ -16,6 +16,7 @@ enum SettingsPane: String, CaseIterable {
     case general = "General"
     case reading = "Reading"
     case theme = "Appearance"
+    case teamSpace = "Team Space"
     case privacy = "Privacy"
     case advanced = "Advanced"
     case about = "About"
@@ -27,6 +28,7 @@ enum SettingsPane: String, CaseIterable {
         case .general: "gearshape"
         case .reading: "book"
         case .theme: "paintpalette"
+        case .teamSpace: "person.2"
         case .privacy: "hand.raised"
         case .advanced: "gearshape.2"
         case .about: "info.circle"
@@ -39,6 +41,7 @@ enum SettingsPane: String, CaseIterable {
         case .general: GeneralSettingsView()
         case .reading: ReadingSettingsView()
         case .theme: ThemeSettingsView()
+        case .teamSpace: TeamSpaceSettingsView()
         case .privacy: PrivacySettingsView()
         case .advanced: AdvancedSettingsView()
         case .about: AboutSettingsView()

@@ -925,8 +925,19 @@ final class ProjectNavigatorView: NSView {
         var rootItem: NSMenuItem?
         defer { if let rootItem { folderPopUp.select(rootItem) } }
 
-        // Favorites first. A root that is a favorite shows there only.
-        let favorites = FavoriteFolders.all.filter(\.isExistingDirectory)
+        // The Team Space first, while a repository is connected, and only
+        // there.
+        let teamFolder = TeamSpace.shared.folderURL?.standardizedFileURL
+        if let teamFolder, teamFolder.isExistingDirectory {
+            menu.addItem(.sectionHeader(title: NSLocalizedString("Team Space", comment: "Project navigator root menu section")))
+            let item = folderMenuItem(teamFolder)
+            if teamFolder == root { rootItem = item }
+            menu.addItem(item)
+            menu.addItem(.separator())
+        }
+
+        // Favorites next. A root that is a favorite shows there only.
+        let favorites = FavoriteFolders.all.filter { $0.isExistingDirectory && $0 != teamFolder }
         if !favorites.isEmpty {
             menu.addItem(.sectionHeader(title: NSLocalizedString("Favorites", comment: "Project navigator root menu section")))
             for favorite in favorites {
@@ -938,7 +949,7 @@ final class ProjectNavigatorView: NSView {
 
         // Then the folders shown last. A root that is not a favorite is
         // the newest of them.
-        let recents = RecentFolders.menuFolders(root: root, favorites: favorites)
+        let recents = RecentFolders.menuFolders(root: root, favorites: favorites).filter { $0 != teamFolder }
         if !recents.isEmpty {
             if !favorites.isEmpty { menu.addItem(.separator()) }
             menu.addItem(.sectionHeader(title: NSLocalizedString("Recent", comment: "Project navigator root menu section")))

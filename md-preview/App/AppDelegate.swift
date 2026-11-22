@@ -172,6 +172,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSMenu
         installAppMenuItems()
         installReleaseNotesMenuItem()
         installViewMenuItemIcons()
+        TeamSpace.shared.start()
         hasFinishedLaunching = true
         if !didReceiveOpenURLsDuringLaunch && !launchedAsLoginItem {
             scheduleDocumentPrompt(requiresNoDocuments: true)

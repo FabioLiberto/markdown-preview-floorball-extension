@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.0.76] – 2026-11-22 – A start page
+
+Markdown Preview Floorball 0.0.76 focuses on getting you writing as soon as the app opens.
+
+### Added
+
+- **Start Page.** Opened without a file, the app shows a start page with New Document, Open File or Folder…, your Team Space, and your recent files and folders, so you start with one click instead of a file chooser ([#5](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/5)).
+
+### Changed
+
+- **New Documents Open Ready to Write.** New Document on the start page opens straight in Edit Mode with the cursor in place, and the app opens on your Team Space when one is connected ([#5](https://github.com/FabioLiberto/markdown-preview-floorball-extension/pull/5)).
+
 ## [0.0.75] – 2026-11-22 – Floorball tactics, shared playbooks
 
 Markdown Preview Floorball 0.0.75 brings floorball tactics diagrams, a Team Space synced with GitHub, and automatic saving.
